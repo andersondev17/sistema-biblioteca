@@ -72,7 +72,7 @@ classDiagram
 - Gestión de roles (administrador y empleado)
 - CRUD completo para autores, libros y usuarios
 - Generación de reportes
-- Documentación completa de endpoints
+- Documentación completa de endpoints : [Aqui](https://docs.google.com/document/d/1I-r1KHZBm6ZxHvHGeeV8F5-v5n1i-smFPe9R8aJvb4s/edit?tab=t.0)
 
 ## Tecnologías
 
@@ -93,7 +93,7 @@ classDiagram
  npm install
 ```
 3. Configurar variables de entorno
-
+```bash
 
 DATABASE_URL="mysql://usuario@localhost:puerto/base_de_datos"
 
@@ -107,9 +107,13 @@ JWT_EXPIRES_IN="1d"
 # Server
 PORT=
 
+```
+
 4. Ejecutar migraciones de la base de datos
 ```bash
   npx prisma migrate dev
+  npx prisma studio
+
 ```
 5. Iniciar el servidor
 ```bash
