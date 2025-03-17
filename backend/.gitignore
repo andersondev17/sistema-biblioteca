@@ -1,0 +1,11 @@
+node_modules
+.npm 
+
+.next
+
+.eslintcache
+
+# dotenv environment variables file 
+.env
+.env.*.local
+
