@@ -31,14 +31,14 @@ const authenticate = async (req, res, next) => {
 
 const checkAdmin = (req, res, next) => {
     if (req.user.tipo !== "ADMINISTRADOR") {
-        return res.status(403).send("Acceso restringido a administradores");
+        return res.status(403).send("Acceso restringido a empleados");
     }
     next();
 };
 
 const checkEmployee = (req, res, next) => {
     if (req.user.tipo !== "EMPLEADO") { 
-        return res.status(403).send("Acceso restringido a empleados");
+        return res.status(403).send("Acceso restringido a administradores");
     }
     next();
 };
