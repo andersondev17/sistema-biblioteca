@@ -11,6 +11,7 @@ const authorRouter = require('./routes/author.routes.js');
 const bookRouter = require('./routes/book.routes.js');
 const reportRouter = require('./routes/report.routes.js');
 const errorMiddleware = require('./middlewares/error.middleware.js');
+const arcjetMiddleware = require('./middlewares/arcjet.middleware.js')
 
 // Inicializar app
 const app = express();
@@ -19,6 +20,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(arcjetMiddleware);
+
 
 // Rutas públicas - para autenticación
 app.use('/api/v1/auth', authRouter);

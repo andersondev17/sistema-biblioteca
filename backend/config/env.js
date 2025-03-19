@@ -10,4 +10,5 @@ module.exports = {
     DATABASE_URL: process.env.DATABASE_URL,
     JWT_SECRET: process.env.JWT_SECRET || "biblioteca_secret_default",
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
+    
 };
