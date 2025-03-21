@@ -25,6 +25,9 @@ const bebasNeue = localFont({
 export const metadata: Metadata = {
   title: "Sistema de biblioteca",
   description: "Solución de biblioteca para mantener una colección sobre los libros que los estudiantes han ido leyendo y sus autores.",
+  icons: {
+    icon: "/icons/logo.svg",
+  }
 };
 
 const RootLayout = ({  children }: {  children: ReactNode;})=> {

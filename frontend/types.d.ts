@@ -26,7 +26,9 @@ interface Libro {
     createdAt?: Date;
     updatedAt?: Date;
     autor?: Autor;
+    cover?: string;
 }
+
 
 // Tipo para la vista combinada (usado en BookOverview)
 interface LibroConAutor extends Libro, Omit<Autor, 'libros' | 'createdAt' | 'updatedAt'> {
@@ -53,4 +55,9 @@ interface Book {
     cedula?: string;
     nombreCompleto?: string;
     nacionalidad: string;
+}
+
+declare global {
+    interface Window {
+    }
 }

@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         hostname: "ik.imagekit.io",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+      }
     ],
   },
   typescript: {
@@ -24,6 +28,15 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3000/api/v1/:path*',
+      },
+    ]
+  },
+
 };
 
 export default nextConfig;
