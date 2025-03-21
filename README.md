@@ -85,7 +85,7 @@ classDiagram
 
 1. Clonar el repositorio
  ```bash
-   git clone https://github.com/tuusuario/biblioteca-municipal-api.git
+   git clone https://github.com/andersondev17/sistema-biblioteca.git
    cd backend
 ```
 2. Instalar dependencias
