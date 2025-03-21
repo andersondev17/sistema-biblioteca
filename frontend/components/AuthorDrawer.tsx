@@ -1,18 +1,11 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import {
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle
-} from "@/components/ui/drawer"
-import { Book } from 'lucide-react'
-import Image from 'next/image'
+import { Button } from '@/components/ui/button';
+import { DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Book, Edit } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
-// Utilizando los tipos definidos basados en Prisma
 interface AuthorDrawerProps {
     autor: Autor;
     libros: LibroView[];
@@ -20,9 +13,16 @@ interface AuthorDrawerProps {
 }
 
 const AuthorDrawer = ({ autor, libros = [], isAdmin = false }: AuthorDrawerProps) => {
+    const router = useRouter();
+    
+    const handleEditAuthor = () => {
+        if (isAdmin && autor.cedula) {
+            router.push(`/admin/authors/edit/${autor.cedula}`);
+        }
+    };
+    
     return (
         <DrawerContent className="bg-dark-300 border-t border-gray-800">
-            {/* Barra de arrastre - Importante para UX móvil */}
             <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-gray-600/50" />
 
             <div className="mx-auto w-full max-w-md px-4 sm:px-6">
@@ -74,8 +74,12 @@ const AuthorDrawer = ({ autor, libros = [], isAdmin = false }: AuthorDrawerProps
 
                 <DrawerFooter className="flex-row gap-3 sm:flex-row sm:justify-end">
                     {isAdmin && (
-                        <Button className="bg-primary-admin text-white hover:bg-primary-admin/90 flex-1 sm:flex-none">
-                            Editar información
+                        <Button 
+                            className="bg-primary-admin text-white hover:bg-primary-admin/90 flex-1 sm:flex-none"
+                            onClick={handleEditAuthor}
+                        >
+                            <Edit size={16} className="mr-2" />
+                            Editar autor
                         </Button>
                     )}
                     <DrawerClose asChild>
@@ -86,7 +90,7 @@ const AuthorDrawer = ({ autor, libros = [], isAdmin = false }: AuthorDrawerProps
                 </DrawerFooter>
             </div>
         </DrawerContent>
-    )
-}
+    );
+};
 
-export default AuthorDrawer
+export default AuthorDrawer;

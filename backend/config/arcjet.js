@@ -26,12 +26,11 @@ const getArcjetInstance = async () => {
                     mode: "LIVE",
                     refillRate: 1,      // a 1 token por intervalo
                     interval: 30,       // cada  30 segundos 
-                    capacity: 3,        // 3 solicitudes máximas
+                    capacity: 5,        // 3 solicitudes máximas
                 }),
             ],
         });
 
-        console.log('✅ Arcjet inicializado correctamente');
         return arcjetInstance;
     } catch (error) {
         console.error('❌ Error al inicializar Arcjet:', error);
