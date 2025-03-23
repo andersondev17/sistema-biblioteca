@@ -24,9 +24,9 @@ const getArcjetInstance = async () => {
                 }),
                 arcjetModule.tokenBucket({
                     mode: "LIVE",
-                    refillRate: 1,      // a 1 token por intervalo
-                    interval: 30,       // cada  30 segundos 
-                    capacity: 5,        // 3 solicitudes máximas
+                    refillRate: 5,      // a 1 token por intervalo
+                    interval: 15,       // cada  30 segundos 
+                    capacity: 30,        //  solicitudes máximas
                 }),
             ],
         });

@@ -1,9 +1,10 @@
 'use client'
 
 import { sampleBooks } from "@/constants"
+import AuthorService from "@/services/author.service"
 import { BookIcon, SearchIcon, UserIcon } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { Input } from "./ui/input"
@@ -20,11 +21,33 @@ interface AuthorReport {
     }[]
 }
 
-const AuthorReport = () => {
-    const [cedula, setCedula] = useState("")
+// Podemos recibir una cédula inicial y un callback cuando hay cambios
+const AuthorReportComponent = ({ 
+    initialCedula,
+    onReportLoaded
+}: { 
+    initialCedula?: string,
+    onReportLoaded?: (report: AuthorReport | null) => void
+}) => {
+    const [cedula, setCedula] = useState(initialCedula || "")
     const [loading, setLoading] = useState(false)
     const [report, setReport] = useState<AuthorReport | null>(null)
     const [error, setError] = useState<string | null>(null)
+
+    // Si recibimos una cédula inicial, cargar automáticamente
+    useEffect(() => {
+        if (initialCedula) {
+            setCedula(initialCedula)
+            handleSearch()
+        }
+    }, [initialCedula])
+
+    // Cuando cambia el reporte, notificar
+    useEffect(() => {
+        if (onReportLoaded) {
+            onReportLoaded(report)
+        }
+    }, [report, onReportLoaded])
 
     const handleSearch = async () => {
         if (!cedula.trim()) {
@@ -36,20 +59,8 @@ const AuthorReport = () => {
         setError(null)
 
         try {
-            const token = localStorage.getItem('auth_token')
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/authors/${cedula}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || "No se encontró el autor")
-            }
-
-            const data = await response.json()
-            setReport(data)
+            const reportData = await AuthorService.getAuthorReport(cedula)
+            setReport(reportData)
         } catch (err) {
             setError(err instanceof Error ? err.message : "Error al buscar el autor")
             setReport(null)
@@ -157,4 +168,4 @@ const AuthorReport = () => {
     )
 }
 
-export default AuthorReport
+export default AuthorReportComponent

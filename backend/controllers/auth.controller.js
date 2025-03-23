@@ -12,56 +12,52 @@ exports.login = async (req, res) => {
         // Acepta tanto email como userName para mayor flexibilidad
         const { email, userName, password } = req.body;
         const loginField = email || userName;
-        
+
         if (!loginField || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Usuario/email y contraseña son requeridos" 
+            return res.status(400).json({
+                success: false,
+                message: "Usuario/email y contraseña son requeridos"
             });
         }
 
-        // Buscar usuario por email o userName
-        const user = await prisma.usuario.findFirst({ 
-            where: { 
-                OR: [
-                    { userName: loginField },
-                    { userName: loginField } // Asumiendo que userName puede ser email
-                ]
-            } 
+        const user = await prisma.usuario.findFirst({
+            where: {
+                userName: loginField
+            }
         });
 
         if (!user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: "Usuario no encontrado" 
+            return res.status(401).json({
+                success: false,
+                message: "Usuario no encontrado"
             });
         }
 
         if (user.password !== password) {
-            return res.status(401).json({ 
-                success: false, 
-                message: "Contraseña incorrecta" 
+            return res.status(401).json({
+                success: false,
+                message: "Contraseña incorrecta"
             });
         }
 
         // Generar token con expiración
         const token = jwt.sign(
-            { id: user.id, tipo: user.tipo }, 
+            { id: user.id, tipo: user.tipo },
             JWT_SECRET,
             { expiresIn: JWT_EXPIRES_IN }
         );
 
         // Excluir contraseña en la respuesta
         const { password: _, ...userWithoutPassword } = user;
-        
-        res.json({ 
+
+        res.json({
             success: true,
             token,
-            user: userWithoutPassword 
+            user: userWithoutPassword
         });
     } catch (error) {
         console.error('Error de login:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             error: "Error en el servidor",
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -73,11 +69,11 @@ exports.login = async (req, res) => {
 exports.register = async (req, res) => {
     try {
         const { userName, password, tipo = "EMPLEADO" } = req.body;
-        
+
         if (!userName || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Usuario y contraseña son requeridos" 
+            return res.status(400).json({
+                success: false,
+                message: "Usuario y contraseña son requeridos"
             });
         }
 
@@ -87,9 +83,9 @@ exports.register = async (req, res) => {
         });
 
         if (existingUser) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "El nombre de usuario ya está en uso" 
+            return res.status(400).json({
+                success: false,
+                message: "El nombre de usuario ya está en uso"
             });
         }
 
@@ -98,10 +94,10 @@ exports.register = async (req, res) => {
         const userRole = usersCount === 0 ? "ADMINISTRADOR" : tipo;
 
         const newUser = await prisma.usuario.create({
-            data: { 
-                userName, 
-                password, 
-                tipo: userRole 
+            data: {
+                userName,
+                password,
+                tipo: userRole
             }
         });
 
@@ -114,7 +110,7 @@ exports.register = async (req, res) => {
         });
     } catch (error) {
         console.error('Error de registro:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             error: "Error en el servidor",
             details: process.env.NODE_ENV === 'development' ? error.message : undefined

@@ -13,7 +13,6 @@ const arcjetMiddleware = async (req, res, next) => {
     try {
       //  1 token por solicitud
       decision = await aj.protect(req, { requested: 1 });
-      console.log(`✅ Arcjet decision:`, decision);
     } catch (e) {
       console.error(`❌ Error en protect:`, e);
       try {
