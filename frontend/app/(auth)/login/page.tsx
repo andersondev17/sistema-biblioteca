@@ -19,14 +19,10 @@ const page = () => {
     try {
       
       const user = await AuthService.login(data);
-
       toast.success("Inicio de sesión exitoso");
-
-      setTimeout(() => {
-        router.push("/");
-      }, 500);
-
+     router.push("/");
       return { success: true };
+      
     } catch (error: any) {
       const errorMessage = error.message || "Credenciales inválidas";
       setError(errorMessage);

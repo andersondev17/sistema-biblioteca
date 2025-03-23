@@ -1,14 +1,32 @@
 // services/author.service.ts
+import { storage, TOKEN_KEY } from '@/services/auth.service';
 import apiClient from './api.service';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 const AuthorService = {
     // Obtener todos los autores
     getAllAuthors: async () => {
         try {
-            const response = await apiClient.get('/authors');
-            return response.data;
+            const token = storage.get<string>(TOKEN_KEY);
+            console.log('Obteniendo autores con token:', token);
+
+            const response = await fetch(`${API_URL}/authors`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Error en la respuesta:', response.status, response.statusText);
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('Autores obtenidos:', data);
+            return data;
         } catch (error) {
-            console.error('Error al obtener autores:', error);
+            console.error('Error al cargar autores:', error);
             throw error;
         }
     },

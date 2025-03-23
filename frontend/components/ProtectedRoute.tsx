@@ -8,7 +8,6 @@ interface ProtectedRouteProps {
     children: React.ReactNode;
     adminOnly?: boolean;
 }
-
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     children,
     adminOnly = false

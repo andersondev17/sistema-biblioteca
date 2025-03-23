@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { Book, Edit } from 'lucide-react';
+import { Book } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
@@ -14,12 +14,6 @@ interface AuthorDrawerProps {
 
 const AuthorDrawer = ({ autor, libros = [], isAdmin = false }: AuthorDrawerProps) => {
     const router = useRouter();
-    
-    const handleEditAuthor = () => {
-        if (isAdmin && autor.cedula) {
-            router.push(`/admin/authors/edit/${autor.cedula}`);
-        }
-    };
     
     return (
         <DrawerContent className="bg-dark-300 border-t border-gray-800">
@@ -73,15 +67,7 @@ const AuthorDrawer = ({ autor, libros = [], isAdmin = false }: AuthorDrawerProps
                 </div>
 
                 <DrawerFooter className="flex-row gap-3 sm:flex-row sm:justify-end">
-                    {isAdmin && (
-                        <Button 
-                            className="bg-primary-admin text-white hover:bg-primary-admin/90 flex-1 sm:flex-none"
-                            onClick={handleEditAuthor}
-                        >
-                            <Edit size={16} className="mr-2" />
-                            Editar autor
-                        </Button>
-                    )}
+                    
                     <DrawerClose asChild>
                         <Button variant="outline" className="border-light-100/20 text-light-100 hover:bg-dark-600 flex-1 sm:flex-none">
                             Cerrar

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { ReactNode } from "react";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 // Configuración de IBM Plex Sans
@@ -35,6 +36,8 @@ const RootLayout = ({  children }: {  children: ReactNode;})=> {
     <html lang="es">
       <body className={`${ibmPlexSans.className} ${bebasNeue.variable} antialiased`}>
         {children}
+
+        <Toaster />
       </body>
     </html>
   );

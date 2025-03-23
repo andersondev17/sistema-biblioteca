@@ -3,8 +3,8 @@
 import { LoginFormValues, RegisterFormValues } from "@/lib/validations";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+export const TOKEN_KEY = 'token';
+export const USER_KEY = 'user';
 
 // Tipo de usuario almacenado en local storage
 interface StoredUser {
@@ -14,7 +14,7 @@ interface StoredUser {
 }
 
 // Utilidades de almacenamiento seguro
-const storage = {
+export const storage = {
     get: <T>(key: string): T | null => {
         if (typeof window === 'undefined') return null;
         try {
@@ -37,6 +37,8 @@ const storage = {
 // Utilidad para fetch con manejo de errores
 const apiFetch = async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
     const token = storage.get<string>(TOKEN_KEY);
+    console.log("Token recuperado:", token);
+
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -60,15 +62,16 @@ const apiFetch = async <T>(endpoint: string, options?: RequestInit): Promise<T> 
 const AuthService = {
     login: async (credentials: LoginFormValues): Promise<StoredUser> => {
         const { token, user } = await apiFetch<{ token: string; user: StoredUser }>('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify(credentials)
+            method: 'POST',
+            body: JSON.stringify(credentials)
         });
-      
-        storage.set(TOKEN_KEY, token); 
+
+        storage.set(TOKEN_KEY, token);
         storage.set(USER_KEY, user);
-      
+        console.log("Token guardado:", token);
+
         return user;
-      },
+    },
     logout: async (): Promise<void> => {
         try {
             await apiFetch('/auth/logout', { method: 'POST' });
@@ -80,20 +83,19 @@ const AuthService = {
         }
     },
 
-    // Registrar usuario (solo admin)
     register: async (userData: RegisterFormValues) =>
         apiFetch('/users', {
             method: 'POST',
             body: JSON.stringify(userData)
         }),
-    isAuthenticated: (): boolean => !!storage.get<string>(TOKEN_KEY),
-    
+    isAuthenticated: () => !!storage.get<string>(TOKEN_KEY),
+
     getCurrentUser: (): StoredUser | null => storage.get<StoredUser>(USER_KEY),
-    
+
     isAdmin: (): boolean => AuthService.getCurrentUser()?.tipo === 'ADMINISTRADOR',
-    
+
     getToken: (): string | null => storage.get<string>(TOKEN_KEY)
-    
+
 };
 
 export default AuthService;
