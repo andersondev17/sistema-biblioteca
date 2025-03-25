@@ -59,11 +59,11 @@ const Header = () => {
 
                 {/* Acciones rápidas */}
                 <div className="flex items-center gap-4">
-                    
+
                     {/* Menú de usuario */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <div className="flex items-center gap-2 cursor-pointer p-1 rounded-full hover:bg-slate-100 transition-colors">
+                            <div className="flex items-center gap-2 cursor-pointer border-light-400 px-6 py-3 rounded-full shadow-sm hover:shadow-md transition-shadow duration-300 max-md:px-2 hover:border-primary-admin/30 border ">
                                 <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
                                     <AvatarFallback className={cn(getAvatarColor(user?.userName || ""))}>
                                         {getInitials(user?.userName || "Usuario")}
@@ -72,17 +72,16 @@ const Header = () => {
                                 <Settings className="h-4 w-4 text-slate-400" />
                             </div>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 mt-1">
-                            <DropdownMenuItem onClick={() => router.push('/profile')}>
+                        <DropdownMenuContent align="end" className="w-56 mt-1 border bg-white border-light-400  py-3 shadow-sm hover:shadow-md transition-shadow duration-300 max-md:px-2 hover:border-primary-admin/30 ">
+                            <DropdownMenuItem className ="hover:bg-light-400" onClick={() => router.push('/profile')}>
                                 Mi Perfil
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push('/settings')}>
-                                Configuración
-                            </DropdownMenuItem>
+                            
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                                 onClick={handleLogout}
-                                className="text-red-500 focus:text-red-500"
+                                className="text-red-500 focus:text-red-500 hover:bg-light-400"
+                                
                             >
                                 Cerrar Sesión
                             </DropdownMenuItem>

@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { userSchema } from "@/lib/validations";
+import { UserFormValues, userSchema } from "@/lib/validations";
 import UserService from "@/services/user.service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
@@ -15,56 +14,59 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-type UserFormValues = {
-    userName: string;
-    password?: string;
-    tipo: "ADMINISTRADOR" | "EMPLEADO";
-};
+interface UserFormProps {
+    initialData?: { id: number; userName: string; tipo: string } | null;
+}
 
-type UserFormProps = {
-    initialData?: Usuario | null;
-};
-
-const UserForm = ({ initialData = null }: UserFormProps) => {
+const UserForm = ({ initialData }: UserFormProps = {}) => {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const isEditing = !!initialData;
 
+    // Inicialización del formulario con valores por defecto
     const form = useForm<UserFormValues>({
         resolver: zodResolver(userSchema),
-        defaultValues: initialData ? {
-            userName: initialData.userName,
-            password: "", // No incluir contraseña en edición
-            tipo: initialData.tipo as "ADMINISTRADOR" | "EMPLEADO",
-        } : {
-            userName: "",
-            password: "",
-            tipo: "EMPLEADO",
-        }
+        defaultValues: initialData
+            ? {
+                userName: initialData.userName,
+                password: "", // No incluimos la contraseña en modo edición
+                tipo: initialData.tipo as "ADMINISTRADOR" | "EMPLEADO"
+            }
+            : {
+                userName: "",
+                password: "",
+                tipo: "EMPLEADO"
+            }
     });
 
+    // Manejador de envío del formulario
     const onSubmit = async (data: UserFormValues) => {
         try {
             setIsSubmitting(true);
 
-            if (isEditing && initialData) {
-                // Solo enviamos la contraseña si no está vacía
-                const userData = data.password
-                    ? data
-                    : { userName: data.userName, tipo: data.tipo };
+            // Preparar datos para enviar
+            const userData = {
+                userName: data.userName.trim(),
+                tipo: data.tipo,
+                // Solo incluir contraseña si se ha ingresado una
+                ...(data.password && { password: data.password.trim() })
+            };
 
+            console.log("Enviando datos:", userData);
+
+            if (isEditing && initialData) {
                 await UserService.updateUser(initialData.id, userData);
                 toast.success("Usuario actualizado exitosamente");
             } else {
-                await UserService.createUser(data);
+                await UserService.createUser(userData);
                 toast.success("Usuario creado exitosamente");
             }
 
-            router.push("/admin/users");
+            router.push('/admin/users');
+            router.refresh();
         } catch (error: any) {
-            const errorMessage = error.response?.data?.error || "Error al guardar el usuario";
-            toast.error(errorMessage);
-            console.error("Error:", error);
+            console.error('Error al procesar el formulario:', error);
+            toast.error(error.message || "Error al procesar la solicitud");
         } finally {
             setIsSubmitting(false);
         }
@@ -72,134 +74,121 @@ const UserForm = ({ initialData = null }: UserFormProps) => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-2">
-                <Link href="/admin/users" className="text-slate-500 hover:text-primary-admin">
-                    <ArrowLeft className="h-5 w-5" />
-                </Link>
-                <h1 className="text-2xl font-bold text-dark-100">
-                    {isEditing ? "Editar Usuario" : "Crear Usuario"}
+            <div className="flex items-center gap-2 mb-6">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="rounded-full"
+                >
+                    <Link href="/admin/users">
+                        <ArrowLeft className="h-5 w-5" />
+                        <span className="sr-only">Volver</span>
+                    </Link>
+                </Button>
+                <h1 className="text-xl font-semibold">
+                    {isEditing ? 'Editar usuario' : 'Crear nuevo usuario'}
                 </h1>
             </div>
 
-            <Card className="border-white">
-                <CardHeader>
-                    <CardTitle className="text-xl text-dark-200">
-                        {isEditing ? "Información del usuario" : "Nuevo usuario"}
-                    </CardTitle>
-                    <CardDescription>
-                        {isEditing
-                            ? "Actualice la información del usuario. Deje la contraseña en blanco para mantenerla sin cambios."
-                            : "Complete la información para crear un nuevo usuario."}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            <div className="grid grid-cols-1 gap-6">
-                                <FormField
-                                    control={form.control}
-                                    name="userName"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-sm font-medium text-dark-200">Nombre de usuario</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    className="border-light-400/50 focus:border-primary-admin"
-                                                    placeholder="usuario123"
-                                                    disabled={isSubmitting}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-red-500" />
-                                        </FormItem>
-                                    )}
-                                />
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                        control={form.control}
+                        name="userName"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Nombre de usuario</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        placeholder="Ingrese nombre de usuario"
+                                        {...field}
+                                        disabled={isSubmitting}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                                <FormField
-                                    control={form.control}
-                                    name="password"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-sm font-medium text-dark-200">
-                                                {isEditing ? "Nueva contraseña (opcional)" : "Contraseña"}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    type="password"
-                                                    className="border-light-400/50 focus:border-primary-admin"
-                                                    placeholder={isEditing ? "••••••••" : "Contraseña"}
-                                                    disabled={isSubmitting}
-                                                    required={!isEditing}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-red-500" />
-                                        </FormItem>
-                                    )}
-                                />
+                    <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>
+                                    {isEditing
+                                        ? 'Contraseña (dejar en blanco para mantener actual)'
+                                        : 'Contraseña'}
+                                </FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="password"
+                                        placeholder="Ingrese contraseña"
+                                        {...field}
+                                        disabled={isSubmitting}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                                <FormField
-                                    control={form.control}
-                                    name="tipo"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-sm font-medium text-dark-200">Tipo de usuario</FormLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                defaultValue={field.value}
-                                                disabled={isSubmitting}
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger className="border-light-400/50 focus:border-primary-admin">
-                                                        <SelectValue placeholder="Seleccione el tipo de usuario" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="ADMINISTRADOR">Administrador</SelectItem>
-                                                    <SelectItem value="EMPLEADO">Empleado</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage className="text-red-500" />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-4 pt-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => router.back()}
+                    <FormField
+                        control={form.control}
+                        name="tipo"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Tipo de usuario</FormLabel>
+                                <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
                                     disabled={isSubmitting}
-                                    className="border-light-400/50 text-dark-400 hover:bg-slate-50"
                                 >
-                                    Cancelar
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className={isEditing
-                                        ? "bg-amber-500 text-white hover:bg-amber-600"
-                                        : "bg-primary-admin text-white hover:bg-primary-admin/90"
-                                    }
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Guardando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Save className="mr-2 h-4 w-4" />
-                                            {isEditing ? 'Actualizar Usuario' : 'Crear Usuario'}
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </form>
-                    </Form>
-                </CardContent>
-            </Card>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Seleccione tipo de usuario" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="ADMINISTRADOR">Administrador</SelectItem>
+                                        <SelectItem value="EMPLEADO">Empleado</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="flex justify-end gap-3 pt-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => router.back()}
+                            disabled={isSubmitting}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-primary text-dark-100 hover:bg-primary/90"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    {isEditing ? 'Actualizando...' : 'Creando...'}
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="mr-2 h-4 w-4" />
+                                    {isEditing ? 'Actualizar' : 'Crear'}
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
         </div>
     );
 };

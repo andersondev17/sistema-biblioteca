@@ -5,7 +5,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DefaultValues, FieldValues, SubmitHandler, useForm } from "react-hook-form";
@@ -137,7 +136,8 @@ const AuthForm = <T extends FieldValues>({
                 </form>
             </Form>
 
-            <p className="text-center text-base font-medium text-light-100">
+
+         {/*    <p className="text-center text-base font-medium text-light-100">
                 {isLogin ? "¿Nuevo por aquí? " : "¿Ya tienes una cuenta? "}
                 <Link
                     href={isLogin ? "/register" : "/login"}
@@ -145,7 +145,7 @@ const AuthForm = <T extends FieldValues>({
                 >
                     {isLogin ? "Crea una cuenta" : "Iniciar Sesión"}
                 </Link>
-            </p>
+            </p> */}
         </div>
     );
 };

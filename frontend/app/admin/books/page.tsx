@@ -39,7 +39,7 @@ export default function BooksPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Gestión de Libros</h1>
         <Button asChild>
-          <Link href="/admin/books/new" className="flex items-center gap-2">
+          <Link href="/admin/books/new" className="flex items-center gap-2 bg-primary-admin hover:bg-blue-300 text-white px-4 py-2 rounded-md shadow-sm">
             <Plus size={16} />
             Nuevo Libro
           </Link>

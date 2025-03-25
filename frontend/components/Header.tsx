@@ -94,7 +94,7 @@ const Header = () => {
                     <Settings size={16} className="mr-2" />
                     Panel de Admin
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => router.push('/register')}>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => router.push('/admin/users/new')}>
                     <User size={16} className="mr-2" />
                     Registrar Usuario
                   </DropdownMenuItem>

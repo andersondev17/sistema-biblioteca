@@ -4,8 +4,7 @@ import { DeleteDialog } from "@/components/admin/DeleteDialog";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BookService from "@/services/book.service";
-import { Edit, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { Edit, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -55,9 +54,8 @@ const BookTable = ({ books, authors }: BookTableProps) => {
 
             <div className="border rounded-lg overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-gray-50">
+                    <TableHeader className="bg-blue-200">
                         <TableRow>
-                            <TableHead className="w-[100px]">Portada</TableHead>
                             <TableHead>Título</TableHead>
                             <TableHead>Género</TableHead>
                             <TableHead>Año</TableHead>
@@ -77,22 +75,7 @@ const BookTable = ({ books, authors }: BookTableProps) => {
                                 const author = authorMap.get(book.autorCedula);
                                 return (
                                     <TableRow key={book.isbn} className="hover:bg-gray-50">
-                                        <TableCell>
-                                            {book.cover ? (
-                                                <div className="relative h-14 w-10 overflow-hidden rounded">
-                                                    <Image
-                                                        src={book.cover}
-                                                        alt={book.editorial}
-                                                        fill
-                                                        className="object-cover"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="h-14 w-10 bg-gray-200 rounded flex items-center justify-center text-gray-400">
-                                                    N/A
-                                                </div>
-                                            )}
-                                        </TableCell>
+
                                         <TableCell className="font-medium">{book.editorial}</TableCell>
                                         <TableCell>{book.genero}</TableCell>
                                         <TableCell>{book.anoPublicacion}</TableCell>
@@ -102,19 +85,23 @@ const BookTable = ({ books, authors }: BookTableProps) => {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    className="h-8 w-8 text-primary-admin hover:text-blue-300   "
                                                     onClick={() => router.push(`/admin/books/edit/${book.isbn}`)}
                                                     title="Editar"
                                                 >
-                                                    <Edit size={16} className="text-gray-500" />
+                                                    <p className="text-xs">Edit</p>
+                                                    <Edit size={16} className="text-primary-admin" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
+                                                    className="h-8 w-8 text-slate-500 hover:text-red-500"
+
                                                     onClick={() => handleDeleteClick(book.isbn)}
                                                     title="Eliminar"
                                                 >
-                                                    <Trash2 size={16} className="text-red-500" />
-                                                </Button>
+                                                    <X size={16}  />
+                                                     </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>

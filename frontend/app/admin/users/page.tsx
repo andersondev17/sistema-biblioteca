@@ -31,14 +31,16 @@ export default function UsersPage() {
   }, []);
 
   return (
-    <div className="p-6">
+    <div className="space-y-6 p-6">
+      <div className="flex justify-between items-center">
       <h1 className="text-2xl font-bold mb-6">Gestión de Usuarios</h1>
       <Button asChild>
-          <Link href="/admin/users/new" className="flex items-center gap-2">
+          <Link href="/admin/users/new" className="flex items-center gap-2 bg-primary-admin hover:bg-blue-300 text-white px-4 py-2 rounded-lg">
             <Plus size={16} />
             Nuevo Usuario
           </Link>
         </Button>
+      </div>
       <UserTable users={users} onDelete={deleteUser} />
     </div>
   );

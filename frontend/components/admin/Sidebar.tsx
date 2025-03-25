@@ -1,8 +1,7 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { adminSideBarLinks } from "@/constants";
-import { cn, getAvatarColor, getInitials } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import AuthService from "@/services/auth.service";
 import Image from "next/image";
 import Link from "next/link";
@@ -86,12 +85,6 @@ const Sidebar = () => {
       {/* Perfil de usuario */}
       {user && (
         <div className="my-8 flex w-full flex-row gap-3 rounded-full border border-light-400 px-6 py-3 shadow-sm hover:shadow-md transition-shadow duration-300 max-md:px-2 hover:border-primary-admin/30">
-          <Avatar className="cursor-pointer">
-            <AvatarFallback className={cn(getAvatarColor(user.userName), "transition-colors duration-300")}>
-              {getInitials(user.userName)}
-            </AvatarFallback>
-          </Avatar>
-
           <div className="flex flex-col max-md:hidden">
             <p className="font-semibold text-dark-200 truncate">{user.userName}</p>
             <p className="text-xs text-light-500 truncate">

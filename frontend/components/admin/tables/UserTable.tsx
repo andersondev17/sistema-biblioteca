@@ -5,7 +5,7 @@ import { DeleteDialog } from "@/components/admin/DeleteDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileEdit, Trash2 } from "lucide-react";
+import { Edit, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ export default function UserTable({ users, onDelete }: UserTableProps) {
 
   const confirmDelete = async () => {
     if (!userToDelete) return;
-    
+
     setIsDeleting(true);
     try {
       await onDelete(userToDelete);
@@ -50,10 +50,10 @@ export default function UserTable({ users, onDelete }: UserTableProps) {
   return (
     <>
       <div className="mt-4 w-full overflow-hidden rounded-md border border-light-400/50">
-        <div className="overflow-x-auto">
+        <div className="border rounded-lg overflow-hidden">
           <Table>
-            <TableHeader>
-              <TableRow>
+          <TableHeader className=" bg-blue-200">
+          <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Usuario</TableHead>
                 <TableHead>Rol</TableHead>
@@ -66,10 +66,10 @@ export default function UserTable({ users, onDelete }: UserTableProps) {
                   <TableCell className="font-medium">{user.id}</TableCell>
                   <TableCell>{user.userName}</TableCell>
                   <TableCell>
-                    <Badge 
-                      variant={user.tipo === 'ADMINISTRADOR' ? 'default' : 'outline'} 
-                      className={user.tipo === 'ADMINISTRADOR' 
-                        ? 'bg-primary-admin text-white' 
+                    <Badge
+                      variant={user.tipo === 'ADMINISTRADOR' ? 'default' : 'outline'}
+                      className={user.tipo === 'ADMINISTRADOR'
+                        ? 'bg-primary-admin text-white'
                         : 'bg-slate-50'
                       }
                     >
@@ -81,12 +81,13 @@ export default function UserTable({ users, onDelete }: UserTableProps) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-slate-500 hover:text-amber-500"
+                        className="h-8 w-8 text-slate-500 hover:text-blue-500"
                         asChild
                       >
                         <Link href={`/admin/users/edit/${user.id}`}>
-                          <FileEdit className="h-4 w-4" />
-                        </Link>
+                        <p className="text-xs">Edit</p>
+                        <Edit size={16} className="text-primary-admin" />
+                                                </Link>
                       </Button>
                       <Button
                         size="icon"
@@ -94,7 +95,8 @@ export default function UserTable({ users, onDelete }: UserTableProps) {
                         className="h-8 w-8 text-slate-500 hover:text-red-500"
                         onClick={() => handleDeleteClick(user.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <X size={16}  />
+
                       </Button>
                     </div>
                   </TableCell>
