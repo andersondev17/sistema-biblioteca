@@ -60,7 +60,7 @@ const ProfilePage = () => {
                         <div className="flex gap-4">
                             {user.tipo === 'ADMINISTRADOR' && (
                                 <Button
-                                    onClick={() => router.push('/register')}
+                                    onClick={() => router.push('/admin/users/new')}
                                     className="bg-secondary hover:bg-secondary/80"
                                 >
                                     Registrar Usuario

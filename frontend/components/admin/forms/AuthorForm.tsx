@@ -41,7 +41,7 @@ const AuthorForm = ({ initialData = null }: AuthorFormProps) => {
                 toast.success("Autor creado exitosamente");
             }
             
-            router.push("/admin/books");
+            router.push("/admin/authors");
             router.refresh();
             
         } catch (error: any) {
@@ -121,13 +121,13 @@ const AuthorForm = ({ initialData = null }: AuthorFormProps) => {
                         variant="outline"
                         onClick={() => router.back()}
                         disabled={isSubmitting}
-                        className="border-gray-300 text-dark-400"
+                        className="border-gray-300 text-dark-400 hover:border-gray-400 hover:text-dark-500"
                     >
                         Cancelar
                     </Button>
                     <Button
                         type="submit"
-                        className="bg-primary text-dark-100 hover:bg-primary/90"
+                        className="text-button bg-primary-admin text-white shadow-xs hover:bg-primary-admin/60"
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? 'Guardando...' : isEditing ? 'Actualizar Autor' : 'Crear Autor'}

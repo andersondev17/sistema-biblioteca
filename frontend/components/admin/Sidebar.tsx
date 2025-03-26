@@ -1,8 +1,7 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { adminSideBarLinks } from "@/constants";
-import { cn, getAvatarColor, getInitials } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import AuthService from "@/services/auth.service";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,9 +25,8 @@ const Sidebar = () => {
   }, [router]);
 
   return (
-    <aside className="sticky left-0 top-0 flex h-dvh flex-col justify-between bg-white/95 backdrop-blur-sm px-5 pb-5 pt-10 shadow-sm border-r border-light-400/30 transition-all duration-300">
+    <aside className="sticky left-0 top-0 flex h-dvh flex-col justify-between bg-white/95 backdrop-blur-sm px-5 pb-5 pt-10 shadow-sm border-r  rounded-r-[70px]  shadow-primary-admin py-8  transition-all duration-300 border border-light-400/30">
       <div>
-        {/* Logo - Ahora con link a home */}
         <Link href="/">
           <div className="flex flex-row items-center gap-2 border-b border-dashed border-primary-admin/20 pb-10 max-md:justify-center cursor-pointer group">
             <Image
@@ -38,7 +36,7 @@ const Sidebar = () => {
               width={37}
               className="transition-transform duration-300 group-hover:scale-110"
             />
-            <h1 className="text-2xl font-semibold text-primary-admin max-md:hidden group-hover:text-primary-admin/80 transition-colors duration-300">
+            <h1 className="text-2xl font-bebas-neue font-semibold text-primary-admin max-md:hidden group-hover:text-primary-admin/80 transition-colors duration-300">
               Libreria
             </h1>
           </div>
@@ -86,12 +84,6 @@ const Sidebar = () => {
       {/* Perfil de usuario */}
       {user && (
         <div className="my-8 flex w-full flex-row gap-3 rounded-full border border-light-400 px-6 py-3 shadow-sm hover:shadow-md transition-shadow duration-300 max-md:px-2 hover:border-primary-admin/30">
-          <Avatar className="cursor-pointer">
-            <AvatarFallback className={cn(getAvatarColor(user.userName), "transition-colors duration-300")}>
-              {getInitials(user.userName)}
-            </AvatarFallback>
-          </Avatar>
-
           <div className="flex flex-col max-md:hidden">
             <p className="font-semibold text-dark-200 truncate">{user.userName}</p>
             <p className="text-xs text-light-500 truncate">
