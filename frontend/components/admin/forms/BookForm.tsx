@@ -182,7 +182,7 @@ const BookForm = ({ initialData = null }: BookFormProps) => {
                                                 <SelectValue placeholder="Seleccione un género" />
                                             </SelectTrigger>
                                         </FormControl>
-                                        <SelectContent>
+                                        <SelectContent className="bg-white">
                                             {genres.map((genre) => (
                                                 <SelectItem key={genre} value={genre}>
                                                     {genre}
@@ -234,7 +234,7 @@ const BookForm = ({ initialData = null }: BookFormProps) => {
                                                 <SelectValue placeholder={isLoadingAuthors ? "Cargando autores..." : "Seleccione un autor"} />
                                             </SelectTrigger>
                                         </FormControl>
-                                        <SelectContent>
+                                        <SelectContent className="bg-white">
                                             {authors.map((author) => (
                                                 <SelectItem key={author.cedula} value={author.cedula}>
                                                     {author.nombreCompleto} ({author.cedula})

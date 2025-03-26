@@ -86,8 +86,24 @@ const UserService = {
     // Eliminar usuario (solo admin)
     deleteUser: async (id: number) => {
         try {
-            const response = await apiClient.delete(`/users/${id}`);
-            return response.data;
+            const token = storage.get<string>(TOKEN_KEY);
+            
+            // Usar fetch directamente para mayor control
+            const response = await fetch(`${API_URL}/users/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            return result;
         } catch (error) {
             console.error(`Error al eliminar usuario con ID ${id}:`, error);
             throw error;

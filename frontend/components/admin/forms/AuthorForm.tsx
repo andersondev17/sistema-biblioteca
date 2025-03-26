@@ -41,7 +41,7 @@ const AuthorForm = ({ initialData = null }: AuthorFormProps) => {
                 toast.success("Autor creado exitosamente");
             }
             
-            router.push("/admin/books");
+            router.push("/admin/authors");
             router.refresh();
             
         } catch (error: any) {
