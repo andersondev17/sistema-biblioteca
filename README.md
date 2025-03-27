@@ -1,8 +1,8 @@
 # Biblioteca Municipal API
 
-API RESTful para la gestión de una biblioteca municipal, permitiendo administrar autores, libros y usuarios.
-
+API RESTful para la gestión de una biblioteca municipal, permitiendo administrar autores, libros y usuarios. con algunas practicas como rate-limiting, DDoS protection, Protección de rutas, db queries con  notificaciones personalizadas.
 # 📚 Diagrama de Clases
+
 
 A continuación se muestra el diagrama de clases del sistema:
 
@@ -64,6 +64,76 @@ classDiagram
     note for Usuario "Autenticación con JWT"
     note for Libro "ISBN único"
 ```
+# 📚La aplicación sigue una arquitectura de capas claramente definida:
+
+
+```mermaid
+
+flowchart TB
+ subgraph subGraph0["Frontend (Next.js)"]
+        UI["Interfaz de Usuario"]
+        Comps["Componentes React"]
+        Pages["Páginas"]
+        Services["Servicios API"]
+  end
+ subgraph subGraph1["API (Node/Express)"]
+        Routes["Rutas API"]
+        Controllers["Controladores"]
+        Middleware["Middlewares"]
+  end
+ subgraph Persistencia["Persistencia"]
+        Prisma["Prisma ORM"]
+        DB[("Base de Datos MySQL")]
+  end
+ subgraph Middleware["Middleware"]
+        Auth["Autenticación"]
+        RBAC["Control de Acceso"]
+        ErrorHandling["Manejo de Errores"]
+        Rate["Rate Limiting"]
+  end
+ subgraph Controladores["Controladores"]
+        AuthCtrl["Auth Controller"]
+        UserCtrl["User Controller"]
+        AuthorCtrl["Author Controller"]
+        BookCtrl["Book Controller"]
+        ReportCtrl["Report Controller"]
+  end
+    UI --> Comps
+    Comps --> Pages
+    Pages --> Services
+    Services -- HTTP Requests --> Routes
+    Routes --> Middleware
+    Middleware --> Controllers
+    Controllers --> Prisma
+    Prisma --> DB
+    Middleware --- Auth & RBAC & ErrorHandling & Rate
+    Controllers --- AuthCtrl & UserCtrl & AuthorCtrl & BookCtrl & ReportCtrl
+
+     UI:::frontend
+     Comps:::frontend
+     Pages:::frontend
+     Services:::frontend
+     Routes:::api
+     Controllers:::api
+     Middleware:::api
+     Prisma:::database
+     DB:::database
+     Auth:::middlewares
+     RBAC:::middlewares
+     ErrorHandling:::middlewares
+     Rate:::middlewares
+     AuthCtrl:::controllers
+     UserCtrl:::controllers
+     AuthorCtrl:::controllers
+     BookCtrl:::controllers
+     ReportCtrl:::controllers
+    classDef frontend fill:#D6E4FF,stroke:#7B93DB,stroke-width:2px
+    classDef api fill:#D1F7C4,stroke:#82B366,stroke-width:2px
+    classDef database fill:#FFE6CC,stroke:#D79B00,stroke-width:2px
+    classDef middlewares fill:#BAC8FF,stroke:#3D56B2,stroke-width:1px
+    classDef controllers fill:#C5E8B7,stroke:#59A041,stroke-width:1px
+```
+
 
 ## Características
 
@@ -119,3 +189,50 @@ PORT=
 ```bash
    npm run dev
 ```
+
+
+#  Patrones de Diseño Implementados
+## - Patrón MVC (Modelo-Vista-Controlador)
+
+El sistema implementa el patrón MVC, separando claramente:
+
+Modelo: Definido mediante esquemas Prisma para las entidades Autor, Libro y Usuario
+Vista: Componentes React en el frontend
+Controlador: Express Controllers que manejan las peticiones HTTP
+
+
+## Patron Singleton
+#### Para asegurarnos de que la base de datos solo tenga una sola instancia 
+```bash 
+//database/db.js
+const { PrismaClient } = require("@prisma/client");
+const { NODE_ENV } = require("../config/env");
+
+class Database {
+    constructor() {
+        if (!Database.instance) {
+            try {
+                Database.instance = new PrismaClient();
+                console.log(`✅ Conectado a la base de datos en modo ${NODE_ENV}.`);
+            } catch (error) {
+                console.error("❌ Error al conectar con la base de datos:", error);
+                process.exit(1);
+            }
+        }
+    }
+
+    getInstance() {
+        return Database.instance;
+    }
+}
+
+module.exports = new Database().getInstance();
+```
+
+# Autenticación de Usuarios (8 puntos)
+
+Sistema de autenticación basado en JWT
+Almacenamiento seguro de tokens en localStorage
+Manejo de roles mediante middlewares
+
+
