@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 interface UserFormProps {
     initialData?: { id: number; userName: string; tipo: string } | null;
+    onSuccess?: () => void;
 }
 
 const UserForm = ({ initialData }: UserFormProps = {}) => {

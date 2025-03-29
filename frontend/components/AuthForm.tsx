@@ -30,7 +30,7 @@ interface AuthFormProps<T extends FieldValues> {
     isLoading?: boolean;
 }
 
-const AuthForm = <T extends FieldValues>({ 
+const AuthForm = <T extends FieldValues>({
     type,
     schema,
     defaultValues,
@@ -40,7 +40,7 @@ const AuthForm = <T extends FieldValues>({
     const router = useRouter();
     const isLogin = type === "LOGIN";
     const [internalLoading, setInternalLoading] = useState(false);
-    
+
     // Use either external or internal loading state
     const isLoading = externalLoading !== undefined ? externalLoading : internalLoading;
 
@@ -51,7 +51,7 @@ const AuthForm = <T extends FieldValues>({
 
     const handleSubmit: SubmitHandler<T> = async (data) => {
         if (!externalLoading) setInternalLoading(true);
-        
+
         try {
             const result = await onSubmit(data);
 
@@ -128,16 +128,19 @@ const AuthForm = <T extends FieldValues>({
                     ))}
 
                     <Button type="submit" className="form-btn" disabled={isLoading}>
-                        {isLoading ? 
-                            "Procesando..." : 
+                        {isLoading ?
+                            "Procesando..." :
                             (isLogin ? "Iniciar Sesión" : "Registrarse")
                         }
                     </Button>
+                    <div className="mt-8 text-center text-xs text-gray-500">
+                        Biblioteca Municipal © {new Date().getFullYear()}
+                    </div>
                 </form>
             </Form>
 
 
-         {/*    <p className="text-center text-base font-medium text-light-100">
+            {/*    <p className="text-center text-base font-medium text-light-100">
                 {isLogin ? "¿Nuevo por aquí? " : "¿Ya tienes una cuenta? "}
                 <Link
                     href={isLogin ? "/register" : "/login"}
