@@ -1,72 +1,43 @@
+// components/AuthorReport.tsx
 'use client'
 
-import { sampleBooks } from "@/constants"
-import AuthorService from "@/services/author.service"
-import { BookIcon, SearchIcon, UserIcon } from "lucide-react"
-import Image from "next/image"
+import { GET_FULL_AUTHORS_REPORT } from '@/graphql/queries/author.query'
+import AuthService from '@/services/auth.service'
+import { useLazyQuery } from '@apollo/client'
+import { SearchIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { Input } from "./ui/input"
 import { Skeleton } from "./ui/skeleton"
 
-interface AuthorReport {
-    nombreCompleto: string
-    nacionalidad: string
-    libros: {
-        isbn: string
-        editorial: string
-        genero: string
-        añoPublicacion: number
-    }[]
-}
-
-// Podemos recibir una cédula inicial y un callback cuando hay cambios
-const AuthorReportComponent = ({ 
-    initialCedula,
-    onReportLoaded
-}: { 
-    initialCedula?: string,
-    onReportLoaded?: (report: AuthorReport | null) => void
-}) => {
+const AuthorReportComponent = ({ initialCedula }: { initialCedula?: string }) => {
     const [cedula, setCedula] = useState(initialCedula || "")
-    const [loading, setLoading] = useState(false)
-    const [report, setReport] = useState<AuthorReport | null>(null)
-    const [error, setError] = useState<string | null>(null)
+    const [userToken, setUserToken] = useState<string | null>(null)
+    const [getReport, { loading, error, data }] = useLazyQuery(GET_FULL_AUTHORS_REPORT, {
+        context: {
+            headers: {
+                Authorization: `Bearer ${userToken}`
+            }
+        },
+        variables: userToken ? {} : {}
+    })
 
-    // Si recibimos una cédula inicial, cargar automáticamente
     useEffect(() => {
-        if (initialCedula) {
-            setCedula(initialCedula)
-            handleSearch()
-        }
-    }, [initialCedula])
+        const token = AuthService.getToken()
+        if (!token) window.location.href = '/login'
+        setUserToken(token)
+    }, [])
 
-    // Cuando cambia el reporte, notificar
     useEffect(() => {
-        if (onReportLoaded) {
-            onReportLoaded(report)
+        if (initialCedula && userToken) {
+            getReport({ variables: { cedula: initialCedula } })
         }
-    }, [report, onReportLoaded])
+    }, [initialCedula, userToken])
 
-    const handleSearch = async () => {
-        if (!cedula.trim()) {
-            setError("Ingrese una cédula para buscar")
-            return
-        }
-
-        setLoading(true)
-        setError(null)
-
-        try {
-            const reportData = await AuthorService.getAuthorReport(cedula)
-            setReport(reportData)
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Error al buscar el autor")
-            setReport(null)
-        } finally {
-            setLoading(false)
-        }
+    const handleSearch = () => {
+        if (!cedula.trim()) return
+        getReport({ variables: { cedula } })
     }
 
     return (
@@ -86,6 +57,7 @@ const AuthorReportComponent = ({
                             value={cedula}
                             onChange={(e) => setCedula(e.target.value)}
                             className="bg-dark-400 border-dark-600 text-light-100"
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         />
                         <Button
                             onClick={handleSearch}
@@ -97,9 +69,7 @@ const AuthorReportComponent = ({
                         </Button>
                     </div>
 
-                    {error && (
-                        <p className="mt-4 text-red-400">{error}</p>
-                    )}
+                    {error && <p className="mt-4 text-red-400">{error.message}</p>}
                 </CardContent>
             </Card>
 
@@ -110,58 +80,17 @@ const AuthorReportComponent = ({
                 </div>
             )}
 
-            {report && (
-                <div className="space-y-6">
-                    <Card className="bg-dark-300 border-dark-600">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-light-200">
-                                <UserIcon className="h-5 w-5 text-primary" />
-                                {report.nombreCompleto}
-                            </CardTitle>
-                            <CardDescription className="text-light-500">
-                                Nacionalidad: {report.nacionalidad}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <h3 className="flex items-center gap-2 text-lg font-semibold text-light-200 mb-4">
-                                <BookIcon className="h-5 w-5 text-primary" />
-                                Libros del autor ({report.libros.length})
-                            </h3>
-
-                            {report.libros.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {report.libros.map((libro) => {
-                                        // Buscar una portada de muestra para visualización
-                                        const sampleBook = sampleBooks.find(b => b.isbn === libro.isbn) || sampleBooks[0]
-
-                                        return (
-                                            <div key={libro.isbn} className="rounded-lg bg-dark-400 p-4 hover:bg-dark-500 transition-colors">
-                                                {sampleBook.cover && (
-                                                    <div className="mb-3 aspect-[2/3] overflow-hidden rounded-md">
-                                                        <Image
-                                                            src={sampleBook.cover}
-                                                            alt={libro.editorial}
-                                                            width={180}
-                                                            height={270}
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    </div>
-                                                )}
-                                                <h4 className="book-title">{libro.editorial}</h4>
-                                                <p className="book-genre">{libro.genero}</p>
-                                                <div className="mt-2 flex items-center gap-2">
-                                                    <Image src="/icons/star.svg" alt="año" width={16} height={16} />
-                                                    <span className="text-sm text-light-100">{libro.añoPublicacion}</span>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            ) : (
-                                <p className="text-light-500">Este autor no tiene libros registrados.</p>
-                            )}
-                        </CardContent>
-                    </Card>
+            {data?.autores?.find((a : Autor) => a.cedula === cedula)?.libros && (
+                <div className="mt-6">
+                    <h2 className="text-2xl font-bold">{data.autores.find((a : Autor) => a.cedula === cedula)?.nombreCompleto}</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        {data.autores.find((a : Autor) => a.cedula === cedula)?.libros.map((libro: any) => (
+                            <div key={libro.isbn} className="bg-white p-4 rounded-lg shadow">
+                                <h3 className="font-semibold">{libro.editorial}</h3>
+                                <p className="text-sm text-gray-600">Año: {libro.anoPublicacion}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

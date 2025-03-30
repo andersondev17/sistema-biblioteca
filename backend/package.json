@@ -16,11 +16,16 @@
   "description": "Backend para sistema de biblioteca con Express, Prisma",
   "dependencies": {
     "@arcjet/node": "^1.0.0-beta.4",
+    "@graphql-tools/merge": "^9.0.24",
+    "@graphql-tools/schema": "^10.0.23",
     "@prisma/client": "^6.5.0",
+    "apollo-server-express": "^3.13.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "graphql": "^16.10.0",
+    "graphql-depth-limit": "^1.1.0",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^6.5.0"
   },

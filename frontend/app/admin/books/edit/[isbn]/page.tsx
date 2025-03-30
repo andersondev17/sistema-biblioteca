@@ -1,12 +1,12 @@
-// app/admin/books/edit/[isbn]/page.tsx
 'use client';
 
 import BookForm from "@/components/admin/forms/BookForm";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useLoading } from "@/contexts/LoadingContext";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useState } from "react";
 
 const EditBookPage = () => {
     const params = useParams();
@@ -14,28 +14,40 @@ const EditBookPage = () => {
     const [book, setBook] = useState<Libro | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { setLoading: setGlobalLoading } = useLoading();
 
-    // Intentar obtener el libro específico
+    // Activar carga INMEDIATAMENTE al montar el componente
+    useLayoutEffect(() => {
+        setGlobalLoading(true);
+    }, [setGlobalLoading]);
+
     useEffect(() => {
+        let isMounted = true;
+        
         const fetchBook = async () => {
             if (!isbn) return;
 
             try {
-                setLoading(true);
-                // Cargar servicio dinámicamente para reducir bundle inicial
                 const BookService = await import("@/services/book.service").then(m => m.default);
                 const data = await BookService.getBookByISBN(isbn);
-                setBook(data);
+                if (isMounted) setBook(data);
             } catch (error: any) {
-                console.error("Error al cargar libro:", error);
-                setError(error.message || "No se pudo cargar la información del libro");
+                if (isMounted) setError(error.message || "Error cargando libro");
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                    setGlobalLoading(false); // Siempre desactivar al final
+                }
             }
         };
 
         fetchBook();
-    }, [isbn]);
+
+        return () => {
+            isMounted = false;
+            setGlobalLoading(false); // Limpieza si el componente se desmonta
+        };
+    }, [isbn, setGlobalLoading]);
 
     if (loading) {
         return (

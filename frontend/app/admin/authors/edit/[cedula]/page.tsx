@@ -3,40 +3,58 @@
 import AuthorForm from "@/components/admin/forms/AuthorForm";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
+import { useLoading } from "@/contexts/LoadingContext";
 import AuthorService from "@/services/author.service";
 import { Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { toast } from "sonner";
 
 const EditAuthorPage = () => {
     const params = useParams();
     const router = useRouter();
     const cedula = params.cedula as string;
-
+    const { setLoading: setGlobalLoading } = useLoading();
+    
     const [author, setAuthor] = useState<Autor | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Activar carga ANTES de montar el componente
+    useLayoutEffect(() => {
+        setGlobalLoading(true);
+    }, [setGlobalLoading]);
+
     useEffect(() => {
+        let isMounted = true;
+
         const fetchAuthor = async () => {
             if (!cedula) return;
             
             try {
-                setLoading(true);
                 const authorData = await AuthorService.getAuthorByCedula(cedula);
-                setAuthor(authorData);
+                if (isMounted) setAuthor(authorData);
             } catch (error: any) {
-                console.error(`Error al cargar autor con cédula ${cedula}:`, error);
-                setError(error.message || "No se pudo cargar la información del autor");
-                toast.error("Error al cargar autor");
+                if (isMounted) {
+                    setError(error.message || "Error cargando autor");
+                    toast.error("Error al cargar autor");
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                    setGlobalLoading(false);
+                }
             }
         };
 
         fetchAuthor();
-    }, [cedula]);
+
+        return () => {
+            isMounted = false;
+            setGlobalLoading(false);
+        };
+    }, [cedula, setGlobalLoading]);
+
 
     if (loading) {
         return (

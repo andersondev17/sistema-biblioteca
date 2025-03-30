@@ -1,3 +1,5 @@
+import ApolloWrapper from "@/components/ApolloWrapper";
+import { LoadingProvider } from "@/contexts/LoadingContext";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { ReactNode } from "react";
@@ -31,13 +33,18 @@ export const metadata: Metadata = {
   }
 };
 
-const RootLayout = ({  children }: {  children: ReactNode;})=> {
+const RootLayout = ({ children }: { children: ReactNode }) => {
   return (
     <html lang="es">
       <body className={`${ibmPlexSans.className} ${bebasNeue.variable} antialiased`}>
-        {children}
+      <ApolloWrapper> {/* Envuelve toda la aplicación */}
 
-        <Toaster />
+        <LoadingProvider>
+          {children}
+          <Toaster />
+        </LoadingProvider>
+
+        </ApolloWrapper>
       </body>
     </html>
   );

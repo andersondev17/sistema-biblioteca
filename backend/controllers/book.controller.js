@@ -56,3 +56,43 @@ exports.deleteBook = async (req, res) => {
         res.status(500).json({ error: "Error al eliminar libro" });
     }
 };
+
+//(Extensión para GraphQL)
+exports.getAllBooksGraphQL = async ({ orderBy, take, include } = {}) => {
+    const options = {
+        include: {}
+    };
+
+    if (include?.autor) {
+        options.include.autor = true;
+    }
+
+    if (orderBy) {
+        options.orderBy = orderBy;
+    }
+
+    if (take && typeof take === 'number') {
+        options.take = take;
+    }
+
+    return await prisma.libro.findMany(options);
+};
+exports.getBookByISBNGraphQL = async (isbn) => {
+    return await prisma.libro.findUnique({
+        where: { isbn },
+        include: { autor: true }
+    });
+};
+
+exports.getDashboardData = async () => {
+    return await prisma.$transaction([
+        prisma.libro.count(),
+        prisma.usuario.count(),
+        prisma.autor.count(),
+        prisma.libro.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' },
+            include: { autor: true }
+        })
+    ]);
+};

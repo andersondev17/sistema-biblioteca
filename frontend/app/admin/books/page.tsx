@@ -13,11 +13,9 @@ function BooksPage() {
 
   const handleDeleteBook = async (isbn: string) => {
     const success = await deleteBook(isbn);
-    if (success) {
-      toast.success("Libro eliminado exitosamente");
-    } else {
-      toast.error("Error al eliminar el libro");
-    }
+    toast[success ? 'success' : 'error'](
+      success ? "Libro eliminado exitosamente" : "Error al eliminar el libro"
+    );
   };
 
   return (

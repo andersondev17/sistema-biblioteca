@@ -55,3 +55,13 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ error: "Error al eliminar usuario" });
     }
 };
+
+exports.getAllUsersGraphQL = async () => {
+    return await prisma.usuario.findMany();
+};
+
+exports.getUserByIdGraphQL = async (id) => {
+    return await prisma.usuario.findUnique({
+        where: { id: parseInt(id) }
+    });
+};
