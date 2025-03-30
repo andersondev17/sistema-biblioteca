@@ -56,6 +56,14 @@ interface Book {
     nombreCompleto?: string;
     nacionalidad: string;
 }
+interface DashboardData {
+    stats: {
+        totalUsers: number;
+        totalBooks: number;
+        totalAuthors: number;
+    };
+    recentBooks: any[];
+}
 
 declare global {
     interface Window {

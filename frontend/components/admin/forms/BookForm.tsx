@@ -1,113 +1,35 @@
+// components/admin/forms/BookForm.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookFormValues, libroSchema } from "@/lib/validations";
-import AuthorService from "@/services/author.service";
-import BookService from "@/services/book.service";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useBookForm } from "@/hooks/useBookForm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { memo } from "react";
 
-type BookFormProps = {
+interface BookFormProps {
     initialData?: Libro | null;
-};
+}
 
 const BookForm = ({ initialData = null }: BookFormProps) => {
     const router = useRouter();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [authors, setAuthors] = useState<Autor[]>([]);
-    const [isLoadingAuthors, setIsLoadingAuthors] = useState(true);
-    const isEditing = !!initialData;
 
-    // Cargar autores al montar el componente
-    useEffect(() => {
-        const fetchAuthors = async () => {
-            try {
-                const data = await AuthorService.getAllAuthors();
-                setAuthors(data);
-            } catch (error) {
-                console.error("Error fetching authors:", error);
-                toast.error("No se pudieron cargar los autores");
-            } finally {
-                setIsLoadingAuthors(false);
-            }
-        };
-
-        fetchAuthors();
-    }, []);
-
-    const form = useForm<BookFormValues>({
-        resolver: zodResolver(libroSchema),
-        defaultValues: initialData || {
-            isbn: "",
-            editorial: "",
-            genero: "",
-            anoPublicacion: new Date().getFullYear(),
-            autorCedula: "",
-            cover: ""
-        }
-    });
-
-    const onSubmit = async (data: BookFormValues) => {
-        try {
-            setIsSubmitting(true);
-
-            const bookData = {
-                ...data,
-                anoPublicacion: Number(data.anoPublicacion)
-            };
-
-            if (isEditing && initialData) {
-                await BookService.updateBook(initialData.isbn, bookData);
-                toast.success("Libro actualizado exitosamente");
-            } else {
-                await BookService.createBook(bookData);
-                toast.success("Libro creado exitosamente");
-            }
-
-            router.push("/admin/books");
-            router.refresh();
-
-        } catch (error: any) {
-            const errorMessage = error.response?.data?.error || "Error al guardar el libro";
-            toast.error(errorMessage);
-            console.error("Error:", error);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    // Lista de géneros comunes
-    const genres = [
-        "Ficción",
-        "No ficción",
-        "Ciencia Ficción",
-        "Fantasía",
-        "Biografía",
-        "Historia",
-        "Misterio",
-        "Aventura",
-        "Romance",
-        "Terror",
-        "Poesía",
-        "Drama",
-        "Realismo mágico",
-        "Ensayo",
-        "Autoayuda"
-    ];
-
-    // Obtener el año actual para el límite del campo año de publicación
-    const currentYear = new Date().getFullYear();
+    const {
+        form,
+        authors,
+        genres,
+        isSubmitting,
+        isLoadingAuthors,
+        isEditing,
+        currentYear,
+        onSubmit
+    } = useBookForm(initialData);
 
     return (
-
         <div className="space-y-6">
             <div className="flex items-center gap-2 mb-6">
                 <Button
@@ -125,6 +47,7 @@ const BookForm = ({ initialData = null }: BookFormProps) => {
                     {isEditing ? 'Editar Libro' : 'Crear nuevo Libro'}
                 </h1>
             </div>
+
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -251,7 +174,6 @@ const BookForm = ({ initialData = null }: BookFormProps) => {
                                 </FormItem>
                             )}
                         />
-
                     </div>
 
                     <div className="flex justify-end gap-4 mt-8">
@@ -278,4 +200,4 @@ const BookForm = ({ initialData = null }: BookFormProps) => {
     );
 };
 
-export default BookForm;
+export default memo(BookForm);

@@ -59,7 +59,7 @@ const BookCard = ({ book, author, isSelected = false, isAdmin = false, onClick }
             )}
 
             <div className="mt-2 flex items-center gap-2">
-                <Image src="/icons/star.svg" alt="año" width={16} height={16} />
+                <Image src="/icons/star.svg" alt="año" width={16} height={16}  style={{ width: 'auto', height: 'auto' }}  />
                 <span className="text-sm text-light-100">{book.anoPublicacion}</span>
             </div>
         </button>

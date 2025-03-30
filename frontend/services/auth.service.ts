@@ -12,7 +12,6 @@ interface StoredUser {
     userName: string;
     tipo: 'ADMINISTRADOR' | 'EMPLEADO';
 }
-
 // Utilidades de almacenamiento seguro
 export const storage = {
     get: <T>(key: string): T | null => {

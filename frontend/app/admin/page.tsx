@@ -1,34 +1,41 @@
 "use client";
 import RecentBooksList from "@/components/admin/dashboard/RecentBooksList";
+import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
 import { QuickAccessGrid, StatCard } from "../../components/admin/dashboard-components";
-import { useDashboardData } from "../../hooks/dashboard";
+import { useDashboardData } from "../../hooks/useDashboard";
 
 const AdminDashboard = () => {
-    const { stats, recentBooks } = useDashboardData();
+    const { stats, recentBooks, loading, error } = useDashboardData();
 
+    if (loading) return <LoadingSkeleton />;
+    if (error) return (
+        <div className="p-4 text-red-500">
+            Error cargando datos: {error.message}
+        </div>
+    );
     return (
-        <div className="space-y-4 p-2 sm:p-0 font-bebas-neue">
+        <div className="space-y-4 pr-4 sm:p-0 font-bebas-neue">
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-3">
-                <StatCard 
+                <StatCard
                     title="Usuarios"
                     value={stats.totalUsers}
                     trend={4}
                     colorClass="text-primary-admin"
-                    className="text-xs sm:text-base p-1 sm:p-2"
+                    className="text-xs sm:text-base  sm:p-2"
                 />
-                <StatCard  
+                <StatCard
                     title="Libros"
                     value={stats.totalBooks}
                     trend={2}
                     colorClass="text-amber-500"
                     className="text-xs sm:text-base p-1 sm:p-2"
                 />
-                <StatCard 
+                <StatCard
                     title="Autores"
                     value={stats.totalAuthors}
                     trend={1}
                     colorClass="text-green-500"
-                    className="col-span-2 sm:col-span-1 text-xs sm:text-base p-1 sm:p-2"
+                    className="col-span-2 sm:col-span-1 text-xs sm:text-base  sm:p-2"
                 />
             </div>
 
@@ -37,7 +44,7 @@ const AdminDashboard = () => {
                     <QuickAccessGrid />
                 </main>
 
-                <aside className="space-y-2 sm:space-y-4 lg:col-span-1">
+                <aside className="space-y-2 sm:space-y-4 pr-4 lg:col-span-1">
                     <RecentBooksList books={recentBooks} />
                 </aside>
             </div>

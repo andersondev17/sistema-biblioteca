@@ -52,3 +52,24 @@ exports.deleteAuthor = async (req, res) => {
         res.status(500).json({ error: "Error al eliminar autor" });
     }
 };
+
+exports.getAllAuthorsGraphQL = async () => {
+    return await prisma.autor.findMany({ include: { libros: true } });
+};
+exports.getAuthorByCedulaGraphQL = async (cedula) => {
+    return await prisma.autor.findUnique({
+        where: { cedula },
+        include: { libros: true }
+    });
+};
+
+exports.getAllAuthorsGraphQL = async () => {
+    return await prisma.autor.findMany({ include: { libros: true } });
+};
+
+exports.getAuthorByCedulaGraphQL = async (cedula) => {
+    return await prisma.autor.findUnique({
+        where: { cedula },
+        include: { libros: true }
+    });
+};

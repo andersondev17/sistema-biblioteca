@@ -1,145 +1,165 @@
+// components/admin/tables/AuthorTable.tsx
 "use client";
 
 import { DeleteDialog } from "@/components/admin/DeleteDialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Search, X } from "lucide-react";
+import { Edit, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { toast } from "sonner";
-import SortableHeader from "./SortableHeader";
+import { memo, useCallback, useMemo, useState } from "react";
+import Loader from "./Loader";
 
-interface Autor {
-    cedula: string;
-    nombreCompleto: string;
-    nacionalidad: string;
-}
-
-interface AuthorTableProps {
+interface Props {
     authors: Autor[];
-    onDelete?: (cedula: string) => Promise<void>;
+    loading?: boolean;
+    onDelete?: (cedula: string) => Promise<void | boolean>;
 }
-export default function AuthorTable({ authors, onDelete }: AuthorTableProps) {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [sortConfig, setSortConfig] = useState<{ field: keyof Autor; dir: "asc" | "desc" }>({
-        field: "nombreCompleto",
-        dir: "asc"
-    });
-    const [deleteState, setDeleteState] = useState<{ open: boolean; cedula?: string; isDeleting: boolean }>({
-        open: false,
-        isDeleting: false
-    });
+
+const AuthorTable = ({ authors, loading, onDelete }: Props) => {
+    const [search, setSearch] = useState("");
+    const [sort, setSort] = useState({ field: "nombreCompleto", dir: "asc" });
+    const [deleteDialog, setDeleteDialog] = useState({ open: false, cedula: "", loading: false });
+
+    // Filtrar y ordenar autores
     const filteredAuthors = useMemo(() => {
-        const term = searchTerm.toLowerCase();
-        const filtered = authors.filter(author =>
-            !searchTerm || [
-                author.nombreCompleto.toLowerCase(),
-                author.nacionalidad.toLowerCase(),
-                author.cedula
-            ].some(field => field.includes(term))
-        );
-        return [...filtered].sort((a, b) =>
-            sortConfig.dir === "asc"
-                ? a[sortConfig.field].localeCompare(b[sortConfig.field])
-                : b[sortConfig.field].localeCompare(a[sortConfig.field]));
-    }, [authors, searchTerm, sortConfig]);
+        if (loading) return [];
 
-    const handleDelete = async () => {
-        if (!deleteState.cedula || !onDelete) return;
+        const term = search.toLowerCase();
+        return [...authors]
+            .filter(a => !term ||
+                a.nombreCompleto.toLowerCase().includes(term) ||
+                a.nacionalidad.toLowerCase().includes(term) ||
+                a.cedula.includes(term)
+            )
+            .sort((a, b) => {
+                const field = sort.field as keyof Autor;
+                const valA = a[field] || "";
+                const valB = b[field] || "";
+                const result = String(valA).localeCompare(String(valB));
+                return sort.dir === "asc" ? result : -result;
+            });
+    }, [authors, search, sort, loading]);
 
+    const handleDelete = useCallback(async () => {
+        if (!onDelete || !deleteDialog.cedula) return;
+
+        setDeleteDialog(d => ({ ...d, loading: true }));
         try {
-            setDeleteState(prev => ({ ...prev, isDeleting: true }));
-            await onDelete(deleteState.cedula);
-            toast.success('Autor eliminado exitosamente');
-        } catch {
-            toast.error('Error al eliminar el autor');
-        } finally {
-            setDeleteState({ open: false, isDeleting: false });
+            await onDelete(deleteDialog.cedula);
+            setDeleteDialog({ open: false, cedula: "", loading: false });
+        } catch (error) {
+            console.error(error);
+            setDeleteDialog(d => ({ ...d, loading: false }));
         }
-    };
+    }, [deleteDialog.cedula, onDelete]);
+
+    if (loading) {
+        return (
+            
+            <Loader />
+        );
+    }
+
     return (
-        <>
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
-                <div className="relative w-full sm:w-64 md:w-72">
+        <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
                         placeholder="Buscar autor..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 bg-white border-slate-200 focus-visible:ring-primary-admin"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="pl-10"
                     />
                 </div>
-                <div className="text-sm text-slate-500">
-                    {searchTerm ? `${filteredAuthors.length} resultados` : `Total: ${authors.length} autores`}
-                </div>
+                <p className="text-sm text-slate-500">
+                    {search ? `${filteredAuthors.length} resultados` : `${authors.length} autores`}
+                </p>
             </div>
 
-            <div className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+            <div className="rounded-lg border overflow-hidden bg-white">
                 <Table>
-                    <TableHeader className="bg-blue-200">
+                    <TableHeader className="bg-blue-50">
                         <TableRow>
-                            {["cedula", "nombreCompleto", "nacionalidad"].map((field) => (
-                                <SortableHeader
-                                    key={field}
-                                    field={field}
-                                    currentField={sortConfig.field}
-                                    direction={sortConfig.dir}
-                                    onClick={(f) => setSortConfig(prev => ({
-                                        field: f as keyof Autor,
-                                        dir: prev.field === f && prev.dir === "asc" ? "desc" : "asc"
+                            {[
+                                { key: 'cedula', label: 'Cédula' },
+                                { key: 'nombreCompleto', label: 'Nombre' },
+                                { key: 'nacionalidad', label: 'Nacionalidad' }
+                            ].map(col => (
+                                <TableHead
+                                    key={col.key}
+                                    className="cursor-pointer hover:bg-blue-100"
+                                    onClick={() => setSort(prev => ({
+                                        field: col.key,
+                                        dir: prev.field === col.key && prev.dir === "asc" ? "desc" : "asc"
                                     }))}
                                 >
-                                    {field === "cedula" ? "Cédula" : field === "nombreCompleto" ? "Nombre Completo" : "Nacionalidad"}
-                                </SortableHeader>
+                                    {col.label}
+                                    {sort.field === col.key && (sort.dir === "asc" ? " ↑" : " ↓")}
+                                </TableHead>
                             ))}
-                            <TableHead className="text-right text-primary-admin font-medium">Acciones</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredAuthors.map((author) => (
-                            <TableRow key={author.cedula} className="hover:bg-slate-50">
-                                <TableCell className="font-mono text-slate-600">{author.cedula}</TableCell>
-                                <TableCell className="font-medium text-slate-700">{author.nombreCompleto}</TableCell>
-                                <TableCell>
-                                    <Badge
-                                        variant="outline"
-                                        color="primary"
-                                        className="text-primary-admin">
-                                        {author.nacionalidad}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button asChild variant="ghost" size="sm" className="h-8 rounded-md text-primary-admin hover:bg-blue-100">
-                                            <Link href={`/admin/authors/edit/${author.cedula}`}>
-                                                <Edit size={16} className="mr-1" />
-                                            </Link>
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 rounded-md text-gray-400 hover:bg-red-100"
-                                            onClick={() => setDeleteState({ open: true, cedula: author.cedula, isDeleting: false })}                                        >
-                                            <X size={16} />
-                                        </Button>
-                                    </div>
+                        {filteredAuthors.length > 0 ? (
+                            filteredAuthors.map(author => (
+                                <TableRow key={author.cedula} className="hover:bg-slate-50">
+                                    <TableCell className="font-mono">{author.cedula}</TableCell>
+                                    <TableCell className="font-medium">{author.nombreCompleto}</TableCell>
+                                    <TableCell>{author.nacionalidad}</TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-8 w-8 text-slate-500 hover:text-amber-500"
+                                                asChild
+                                            >
+                                                <Link href={`/admin/authors/edit/${author.cedula}`}>
+                                                    <Edit size={16} />
+                                                </Link>
+                                            </Button>
+                                            {onDelete && (
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 text-slate-500 hover:text-red-500"
+                                                    onClick={() => setDeleteDialog({
+                                                        open: true,
+                                                        cedula: author.cedula,
+                                                        loading: false
+                                                    })}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                                    {search ? "No se encontraron autores" : "No hay autores disponibles"}
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )}
                     </TableBody>
                 </Table>
             </div>
 
             <DeleteDialog
-                open={deleteState.open}
-                onOpenChange={(open) => setDeleteState(prev => ({ ...prev, open }))}
+                open={deleteDialog.open}
+                onOpenChange={open => setDeleteDialog(d => ({ ...d, open }))}
                 onConfirm={handleDelete}
-                isDeleting={deleteState.isDeleting}
-                title="¿Confirma eliminar este autor?"
-                description="Esta acción no se puede deshacer. El autor y su asociación con los libros será eliminada permanentemente."
+                isDeleting={deleteDialog.loading}
+                title="¿Eliminar este autor?"
+                description="Esta acción no se puede deshacer. Se eliminará el autor y su relación con los libros."
             />
-        </>
+        </div>
     );
-}
+};
+
+export default memo(AuthorTable);

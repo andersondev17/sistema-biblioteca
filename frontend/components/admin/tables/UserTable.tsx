@@ -1,3 +1,4 @@
+// components/admin/tables/UserTable.tsx
 "use client";
 
 import { DeleteDialog } from "@/components/admin/DeleteDialog";
@@ -5,154 +6,176 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Search, Shield, User, X } from "lucide-react";
+import { Edit, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { toast } from "sonner";
-import SortableHeader from "./SortableHeader";
+import { memo, useCallback, useMemo, useState } from "react";
+import Loader from './Loader';
 
-interface Usuario {
-  id: number;
-  userName: string;
-  tipo: string;
-}
-
-interface UserTableProps {
+interface Props {
   users: Usuario[];
-  onDelete: (id: number) => Promise<void>;
+  loading?: boolean;
+  onDelete?: (id: number) => Promise<void | boolean>;
 }
 
-export default function UserTable({ users, onDelete }: UserTableProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ field: keyof Usuario; dir: "asc" | "desc" }>({
-    field: "userName",
-    dir: "asc"
-  });
-  const [deleteState, setDeleteState] = useState<{ open: boolean; userId?: number; isDeleting?: boolean }>({
-    open: false,
-    isDeleting: false
-  });
+const UserTable = ({ users, loading, onDelete }: Props) => {
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState({ field: "userName", dir: "asc" });
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, id: 0, loading: false });
 
+  // Filtrar y ordenar usuarios
   const filteredUsers = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-    return users
-      .filter(user => 
-        !searchTerm || 
-        [user.userName, user.tipo, user.id.toString()].some(f => f.toLowerCase().includes(term))
+    if (loading) return [];
+    
+    const term = search.toLowerCase();
+    return [...users]
+      .filter(u => !term || 
+        u.userName.toLowerCase().includes(term) || 
+        u.tipo.toLowerCase().includes(term) ||
+        String(u.id).includes(term)
       )
       .sort((a, b) => {
-        const valA = String(a[sortConfig.field]);
-        const valB = String(b[sortConfig.field]);
-        return sortConfig.dir === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        const field = sort.field as keyof Usuario;
+        const valA = a[field] || "";
+        const valB = b[field] || "";
+        const result = String(valA).localeCompare(String(valB));
+        return sort.dir === "asc" ? result : -result;
       });
-  }, [users, searchTerm, sortConfig]);
+  }, [users, search, sort, loading]);
 
-  const handleDelete = async () => {
-    if (!deleteState.userId) return;
-
+  // Manejar eliminación
+  const handleDelete = useCallback(async () => {
+    if (!onDelete || !deleteDialog.id) return;
+    
+    setDeleteDialog(d => ({ ...d, loading: true }));
     try {
-      setDeleteState(prev => ({ ...prev, isDeleting: true }));
-      await onDelete(deleteState.userId);
-      toast.success('Usuario eliminado exitosamente');
-    } catch {
-      toast.error('Error al eliminar el usuario');
-    } finally {
-      setDeleteState({ open: false, isDeleting: false });
+      await onDelete(deleteDialog.id);
+      setDeleteDialog({ open: false, id: 0, loading: false });
+    } catch (error) {
+      console.error(error);
+      setDeleteDialog(d => ({ ...d, loading: false }));
     }
-  };
+  }, [deleteDialog.id, onDelete]);
+
+  // Componente de carga
+  if (loading) {
+    return (  
+    <Loader />
+    
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full sm:w-64 md:w-72">
+    <div className="space-y-4">
+      {/* Barra de búsqueda */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="Buscar usuario..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-white border-slate-200 focus-visible:ring-primary-admin"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10"
           />
         </div>
-        <div className="text-sm text-slate-500">
-          {searchTerm ? `${filteredUsers.length} resultados` : `Total: ${users.length} usuarios`}
-        </div>
+        <p className="text-sm text-slate-500">
+          {search ? `${filteredUsers.length} resultados` : `${users.length} usuarios`}
+        </p>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+      {/* Tabla */}
+      <div className="rounded-lg border overflow-hidden bg-white">
         <Table>
-          <TableHeader className="bg-blue-200">
+          <TableHeader className="bg-blue-50">
             <TableRow>
-              {['id', 'userName', 'tipo'].map((field) => (
-                <SortableHeader
-                  key={field}
-                  field={field}
-                  currentField={sortConfig.field}
-                  direction={sortConfig.dir}
-                  onClick={(f) => setSortConfig(prev => ({
-                    field: f as keyof Usuario,
-                    dir: prev.field === f && prev.dir === "asc" ? "desc" : "asc"
+              {[
+                { key: 'id', label: 'ID' },
+                { key: 'userName', label: 'Usuario' },
+                { key: 'tipo', label: 'Rol' }
+              ].map(col => (
+                <TableHead
+                  key={col.key}
+                  className="cursor-pointer hover:bg-blue-100"
+                  onClick={() => setSort(prev => ({
+                    field: col.key,
+                    dir: prev.field === col.key && prev.dir === "asc" ? "desc" : "asc"
                   }))}
                 >
-                  {{
-                    id: 'ID',
-                    userName: 'Usuario',
-                    tipo: 'Rol'
-                  }[field]}
-                </SortableHeader>
+                  {col.label}
+                  {sort.field === col.key && (sort.dir === "asc" ? " ↑" : " ↓")}
+                </TableHead>
               ))}
-              <TableHead className="text-right text-primary-admin font-medium">Acciones</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map(user => (
-              <TableRow key={user.id} className="hover:bg-slate-50">
-                <TableCell className="font-mono text-slate-600">{user.id}</TableCell>
-                <TableCell className="font-medium flex items-center gap-2">
-                  <User className="h-4 w-4 text-slate-400" />
-                  <span className="text-slate-700">{user.userName}</span>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={user.tipo === 'ADMINISTRADOR' ? 'default' : 'outline'}
-                    className={user.tipo === 'ADMINISTRADOR' 
-                      ? 'bg-primary-admin text-white' 
-                      : 'bg-slate-50 text-slate-700 border-slate-200'}
-                  >
-                    {user.tipo === 'ADMINISTRADOR' && <Shield className="h-3 w-3 mr-1" />}
-                    {user.tipo}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button asChild variant="ghost" size="sm" className="h-8 text-primary-admin hover:bg-blue-100">
-                      <Link href={`/admin/users/edit/${user.id}`}>
-                        <Edit size={16} className="mr-1" /> Editar
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-gray-400 hover:bg-red-100"
-                      onClick={() => setDeleteState({ open: true, userId: user.id })}
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map(user => (
+                <TableRow key={user.id} className="hover:bg-slate-50">
+                  <TableCell className="font-mono">{user.id}</TableCell>
+                  <TableCell className="font-medium">{user.userName}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={user.tipo === 'ADMINISTRADOR' ? 'default' : 'outline'}
+                      className={user.tipo === 'ADMINISTRADOR' 
+                        ? 'bg-primary-admin text-white' 
+                        : 'bg-slate-50 text-slate-700'
+                      }
                     >
-                      <X size={16} />
-                    </Button>
-                  </div>
+                      {user.tipo}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-slate-500 hover:text-amber-500"
+                        asChild
+                      >
+                        <Link href={`/admin/users/edit/${user.id}`}>
+                          <Edit size={16} />
+                        </Link>
+                      </Button>
+                      {onDelete && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-slate-500 hover:text-red-500"
+                          onClick={() => setDeleteDialog({ 
+                            open: true, 
+                            id: user.id, 
+                            loading: false 
+                          })}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                  {search ? "No se encontraron usuarios" : "No hay usuarios disponibles"}
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
 
+      {/* Diálogo de confirmación */}
       <DeleteDialog
-        open={deleteState.open}
-        onOpenChange={(open) => setDeleteState(prev => ({ ...prev, open }))}
+        open={deleteDialog.open}
+        onOpenChange={open => setDeleteDialog(d => ({ ...d, open }))}
         onConfirm={handleDelete}
-        isDeleting={deleteState.isDeleting ?? false}
-        title="¿Confirma eliminar este usuario?"
+        isDeleting={deleteDialog.loading}
+        title="¿Eliminar este usuario?"
         description="Esta acción no se puede deshacer. El usuario será eliminado permanentemente."
       />
     </div>
   );
-}
+};
+
+export default memo(UserTable);

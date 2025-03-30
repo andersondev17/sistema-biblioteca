@@ -1,37 +1,47 @@
+// page.tsx - Versión Corregida
 'use client'
 
 import AuthorReport from '@/components/AuthorReport'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import AuthorService from '@/services/author.service'
+import { GET_FULL_AUTHORS_REPORT } from '@/graphql/queries/author.query'
+import AuthService from '@/services/auth.service'
+import { useQuery } from '@apollo/client'
 import { FileText, User } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const ReportsPage = () => {
-  const [authors, setAuthors] = useState<Autor[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedCedula, setSelectedCedula] = useState("")
-  const reportRef = useRef<any>(null)
+  const [userToken, setUserToken] = useState<string | null>(null)
 
+  // Verificar autenticación al montar el componente
   useEffect(() => {
-    const fetchAuthors = async () => {
-      try {
-        const data = await AuthorService.getAllAuthors()
-        setAuthors(data)
-      } catch (err) {
-        console.error('Error al cargar autores:', err)
-      } finally {
-        setLoading(false)
-      }
+    const token = AuthService.getToken()
+    const user = AuthService.getCurrentUser()
+    
+    if (!token || !user) {
+      window.location.href = '/login'
+      return
     }
-
-    fetchAuthors()
+    
+    setUserToken(token)
   }, [])
+
+  const { loading, error, data } = useQuery(GET_FULL_AUTHORS_REPORT, {
+    context: {
+      headers: {
+        Authorization: `Bearer ${userToken}`
+      }
+    },
+    skip: !userToken // Evitar consulta sin token
+  })
 
   const handleAuthorSelect = (cedula: string) => {
     setSelectedCedula(cedula)
   }
+
+  if (!userToken) return null // Evitar renderizado innecesario
 
   return (
     <ProtectedRoute>
@@ -40,7 +50,7 @@ const ReportsPage = () => {
           <FileText className="h-6 w-6 text-primary" />
           <h1 className="text-3xl font-semibold text-white">Reportes de Autores</h1>
         </div>
-        
+
         <Card className="bg-dark-300 border-dark-600">
           <CardHeader>
             <CardTitle className="text-light-200">Autores disponibles</CardTitle>
@@ -55,12 +65,17 @@ const ReportsPage = () => {
                   <Skeleton key={i} className="h-16 w-full sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-0.75rem)] bg-dark-400" />
                 ))}
               </div>
+            ) : error ? (
+              <div className="text-red-400">Error cargando autores: {error.message}</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {authors.map(author => (
-                  <div 
-                    key={author.cedula} 
-                    className={`flex items-center gap-2 p-3 rounded-lg ${selectedCedula === author.cedula ? 'bg-dark-500 ring-2 ring-primary' : 'bg-dark-400 hover:bg-dark-500'} transition-colors cursor-pointer`}
+                {data?.autores.map((author: Autor) => (
+                  <div
+                    key={author.cedula}
+                    className={`flex items-center gap-2 p-3 rounded-lg ${selectedCedula === author.cedula
+                        ? 'bg-dark-500 ring-2 ring-primary'
+                        : 'bg-dark-400 hover:bg-dark-500'
+                      } transition-colors cursor-pointer`}
                     onClick={() => handleAuthorSelect(author.cedula)}
                   >
                     <User className="h-5 w-5 text-primary flex-shrink-0" />
@@ -70,8 +85,8 @@ const ReportsPage = () => {
                     </div>
                   </div>
                 ))}
-                
-                {authors.length === 0 && (
+
+                {data?.autores.length === 0 && (
                   <div className="col-span-full p-4 text-light-500 text-center">
                     No hay autores disponibles
                   </div>
@@ -80,12 +95,8 @@ const ReportsPage = () => {
             )}
           </CardContent>
         </Card>
-        
-        {/* reporte con la cédula seleccionada */}
-        <AuthorReport 
-          initialCedula={selectedCedula} 
-          
-        />
+
+        <AuthorReport initialCedula={selectedCedula} />
       </div>
     </ProtectedRoute>
   )

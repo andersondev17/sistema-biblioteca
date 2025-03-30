@@ -75,7 +75,7 @@ const AuthorService = {
         }
     },
 
-    // Obtener reporte de autor con sus libros (solo empleado)
+/*     // Obtener reporte de autor con sus libros (solo empleado)
     getAuthorReport: async (cedula: string) => {
         try {
             const response = await apiClient.get(`/reports/authors/${cedula}`);
@@ -84,7 +84,7 @@ const AuthorService = {
             console.error(`Error al obtener reporte del autor con cédula ${cedula}:`, error);
             throw error;
         }
-    }
+    } */
 };
 
 export default AuthorService;
