@@ -1,6 +1,17 @@
 # Biblioteca Municipal API
 
-API RESTful para la gestión de una biblioteca municipal, permitiendo administrar autores, libros y usuarios. con algunas practicas como rate-limiting, DDoS protection, Protección de rutas, db queries con  notificaciones personalizadas.
+![Node.js](https://img.shields.io/badge/Node.js-18.x-green)
+![Express](https://img.shields.io/badge/Express-4.x-lightgrey)
+![Prisma](https://img.shields.io/badge/Prisma-6.x-blue)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-orange)
+![JWT](https://img.shields.io/badge/JWT-Auth-critical)
+![React](https://img.shields.io/badge/React-19.x-%2361DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-%233178C6)
+![Next.js](https://img.shields.io/badge/Next.js-15.x-black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.x-%2338B2AC)
+
+Sistema para gestión de bibliotecas con seguimiento de relaciones entre libros, autores y usuarios. Combina API REST tradicional con endpoints GraphQL para casos específicos de alto rendimiento.
+
 # 📚 Diagrama de Clases
 
 
