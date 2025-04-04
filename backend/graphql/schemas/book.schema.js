@@ -27,13 +27,13 @@ const typeDefs = gql`
     DESC
   }
 
-  type Query {
+  type Query {  ##consulta de libros por orden de creacion 
     libros(
       orderBy: LibroOrderByInput
       take: Int
       include: LibroIncludeInput
     ): [Libro!]!
-    libro(isbn: String!): Libro
+    libro(isbn: String!): Libro ##consulta de un libro por ISBN
   }
 
   input LibroIncludeInput {

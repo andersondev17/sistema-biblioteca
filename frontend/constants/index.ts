@@ -11,6 +11,16 @@ export const navigationLinks = [
         label: "My Profile",
     },
 ];
+type DashboardStats = {
+    totalUsers: number;
+    totalBooks: number;
+    totalAuthors: number;
+  };
+export const INITIAL_STATS: DashboardStats = {
+    totalUsers: 0,
+    totalBooks: 0,
+    totalAuthors: 0,
+  };
 
 export const adminSideBarLinks = [
     {

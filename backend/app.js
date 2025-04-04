@@ -1,135 +1,117 @@
 // app.js
 const express = require('express');
 const cors = require('cors');
-const { PORT, NODE_ENV } = require('./config/env.js');
-const { authenticate } = require('./middlewares/auth.middleware.js');
 const { ApolloServer } = require('apollo-server-express');
 const depthLimit = require('graphql-depth-limit');
-const typeDefs = require('./graphql/schemas');
 const jwt = require("jsonwebtoken");
+const { PORT, NODE_ENV } = require('./config/env.js');
+const { authenticate } = require('./middlewares/auth.middleware.js');
+const typeDefs = require('./graphql/schemas');
 const resolvers = require('./graphql/resolvers');
 const prisma = require('./database/db');
-
-// Importar rutas
-const authRouter = require('./routes/auth.routes.js');
-const userRouter = require('./routes/user.routes.js');
-const authorRouter = require('./routes/author.routes.js');
-const bookRouter = require('./routes/book.routes.js');
-const reportRouter = require('./routes/report.routes.js');
 const errorMiddleware = require('./middlewares/error.middleware.js');
 const arcjetMiddleware = require('./middlewares/arcjet.middleware.js');
 
-// Inicializar app
+// Configuración inicial
 const app = express();
-
-// Middlewares globales
-app.use(cors({
+const CORS_CONFIG = {
     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
     credentials: true,
     allowedHeaders: ['Authorization', 'Content-Type']
-}));
+};
+
+// Helpers
+const getAuthenticatedUser = async (authHeader) => {
+    // Verificar si hay token en el header
+
+    if (!authHeader?.startsWith('Bearer ')) return null;
+
+    try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verificar el token y obtener la información del usuario
+
+        return await prisma.usuario.findFirst({ where: { id: decoded.id } });
+    } catch (error) {
+        console.error('Authentication error:', error.message);
+        return null;
+    }
+};
+
+// Configuración Apollo Server
+const createApolloServer = () => new ApolloServer({ //Instancia de Apollo Server
+    typeDefs,
+    resolvers,
+    // Contexto para resolver las peticiones con el usuario autenticado
+    context: async ({ req }) => ({ user: await getAuthenticatedUser(req.headers.authorization) }),
+    validationRules: [depthLimit(5)],
+    formatError: (err) => {
+        console.error('GraphQL Error:', err);
+        return err;
+    },
+    introspection: true,
+    playground: { settings: { 'request.credentials': 'include' } }
+});
+
+// Middlewares base
+app.use(cors(CORS_CONFIG));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(arcjetMiddleware);
 
-// Rutas públicas - para autenticación
-app.use('/api/v1/auth', authRouter);
+// Rutas
+const API_PREFIX = '/api/v1';
+const routes = [
+    { path: '/auth', handler: require('./routes/auth.routes.js') },
+    { path: '/users', handler: require('./routes/user.routes.js'), protected: true },
+    { path: '/authors', handler: require('./routes/author.routes.js'), protected: true },
+    { path: '/books', handler: require('./routes/book.routes.js'), protected: true },
+    { path: '/reports', handler: require('./routes/report.routes.js'), protected: true },
+];
 
-// Rutas protegidas - requieren autenticación
-app.use('/api/v1/users', authenticate, userRouter);
-app.use('/api/v1/authors', authenticate, authorRouter);
-app.use('/api/v1/books', authenticate, bookRouter);
-app.use('/api/v1/reports', authenticate, reportRouter);
-
-// Ruta raíz
-app.get('/', (req, res) => {
-    res.json({
-        message: 'API Biblioteca v1.0',
-        status: 'online',
-        environment: NODE_ENV
-    });
+routes.forEach(({ path, handler, protected }) => {
+    const middleware = protected ? [authenticate] : [];
+    app.use(`${API_PREFIX}${path}`, ...middleware, handler);
 });
 
+// Health Check
+app.get('/', (req, res) => res.json({
+    message: 'API Biblioteca v1.0',
+    status: 'online',
+    environment: NODE_ENV
+}));
 
-const startApolloServer = async () => {
+// Inicialización Servidores
+const initializeServers = async () => {
     try {
-        const apolloServer = new ApolloServer({
-            typeDefs,
-            resolvers,
-            context: async ({ req }) => {
-                let user = null;
-                try {
-                    // Verificar si hay token en el header
-                    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-                        const token = req.headers.authorization.split(' ')[1];
-                        
-                        // Verificar el token y obtener la información del usuario
-                        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'biblioteca_secret_key');
-                        
-                        user = await prisma.usuario.findUnique({
-                            where: { id: decoded.id }
-                        });
-                        
-                    }
-                } catch (error) {
-                    console.error('Error de autenticación GraphQL:', error.message);
-                }
-                
-                return { user };
-            },
-            formatError: (err) => {
-                console.error('GraphQL Error:', err);
-                return err;
-            },
-            validationRules: [depthLimit(5)],
-            introspection: true,
-            playground: {
-                settings: {
-                    'request.credentials': 'include',
-                }
-            }
-        });
-        
+        const apolloServer = createApolloServer();
         await apolloServer.start();
-        apolloServer.applyMiddleware({ app, path: '/graphql', cors: true });
-        
-        console.log(`🚀 Servidor GraphQL listo en http://localhost:${PORT}${apolloServer.graphqlPath}`);
-        return apolloServer;
+        apolloServer.applyMiddleware({ app, path: '/graphql', cors: CORS_CONFIG });
+
+        app.use('*', (req, res) => res.status(404).json({
+            success: false,
+            message: 'Ruta no encontrada'
+        }));
+
+        app.use(errorMiddleware);
+
+        const expressServer = app.listen(PORT, () => {
+            console.log(`✅ Servidor REST - LISTO:   http://localhost:${PORT}${API_PREFIX} (${NODE_ENV})`);
+            console.log(`🚀 Servidor GraphQL - LISTO: http://localhost:${PORT}${apolloServer.graphqlPath}`);
+        });
+
+        process.on('unhandledRejection', (err) => {
+            console.error('❌ Error no manejado:', err);
+            expressServer.close(() => process.exit(1));
+        });
+
+        return { apolloServer, expressServer };
     } catch (error) {
-        console.error('❌ Error al iniciar Apollo Server:', error);
-        throw error;
+        console.error('Error de inicialización:', error);
+        process.exit(1);
     }
 };
 
-// Iniciar Apollo Server antes de registrar el middleware de rutas no encontradas
-(async () => {
-    try {
-        await startApolloServer();
-        
-        app.use('*', (req, res) => {
-            res.status(404).json({
-                success: false,
-                message: 'Ruta no encontrada'
-            });
-        });
-        
-        // Error handling centralizado
-        app.use(errorMiddleware);
-        
-        // Iniciar servidor Express
-        const server = app.listen(PORT, () => {
-            console.log(`✅ Servidor corriendo en http://localhost:${PORT} (${NODE_ENV})`);
-        });
-        
-        // Manejo de errores no capturados
-        process.on('unhandledRejection', (err) => {
-            console.error('❌ Error no manejado:', err);
-            server.close(() => process.exit(1));
-        });
-    } catch (error) {
-        console.error('Error al iniciar la aplicación:', error);
-        process.exit(1);
-    }
-})();
+// Iniciar aplicación
+initializeServers();
 
 module.exports = app;

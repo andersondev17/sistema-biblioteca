@@ -1,9 +1,10 @@
-// graphql/queries/dashboard.query.ts
+// Consulta GraphQL para obtener todos los datos necesarios para el dashboard
 import { gql } from '@apollo/client';
 
 export const GET_DASHBOARD_DATA = gql`
+  # Obtenemos solo los campos necesarios combinados en una sola consulta reduciendo solicitudes
   query GetDashboardData {
-    totalBooks: librosCount
+    totalBooks: librosCount  
     totalUsers: usuariosCount
     totalAuthors: autoresCount
     recentBooks: libros(take: 5) {
