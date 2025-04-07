@@ -7,7 +7,7 @@ const httpLink = createHttpLink({
     uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:3000/graphql',
 });
 
-const authLink = setContext((_, { headers }) => {
+const authLink = setContext((_, { headers }) => {//configura el token de autenticacion con el header
     const token = AuthService.getToken();
     return {
         headers: {
@@ -17,7 +17,7 @@ const authLink = setContext((_, { headers }) => {
     };
 });
 
-export const graphqlClient = new ApolloClient({
+export const graphqlClient = new ApolloClient({//crea una instancia del cliente de apollo
     link: authLink.concat(httpLink),
     cache: new InMemoryCache(),
     defaultOptions: {
@@ -32,7 +32,7 @@ export const graphqlClient = new ApolloClient({
 });
 
 export function createClient() {
-    return new ApolloClient({
+    return new ApolloClient({//returna una nueva instancia del cliente de apollo
         link: authLink.concat(httpLink),
         cache: new InMemoryCache({
             typePolicies: {

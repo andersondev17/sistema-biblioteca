@@ -2,7 +2,7 @@
 
 ![Node.js](https://img.shields.io/badge/Node.js-18.x-green)
 ![Express](https://img.shields.io/badge/Express-4.x-lightgrey)
-![Prisma](https://img.shields.io/badge/Prisma-6.x-blue)
+![Prisma ORM](https://img.shields.io/badge/Prisma-6.x-blue)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-orange)
 ![JWT](https://img.shields.io/badge/JWT-Auth-critical)
 ![React](https://img.shields.io/badge/React-19.x-%2361DAFB)
@@ -10,7 +10,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-15.x-black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.x-%2338B2AC)
 
-Sistema para gestión de bibliotecas con seguimiento de relaciones entre libros, autores y usuarios. Combina API REST tradicional con endpoints GraphQL para casos específicos de alto rendimiento.
+Sistema para gestión de bibliotecas con seguimiento de relaciones entre libros, autores y usuarios. Combina API REST tradicional con endpoints GraphQL para casos específicos de alto rendimiento.Con algunas practicas como rate-limiting, DDoS protection y Protección de rutas.
 
 # 📚 Diagrama de Clases
 
@@ -75,132 +75,6 @@ classDiagram
     note for Usuario "Autenticación con JWT"
     note for Libro "ISBN único"
 ```
-# 📚La aplicación sigue una arquitectura de capas claramente definida:
-
-
-```mermaid
-
-flowchart TB
- subgraph subGraph0["Frontend (Next.js)"]
-        UI["Interfaz de Usuario"]
-        Comps["Componentes React"]
-        Pages["Páginas"]
-        Services["Servicios API"]
-  end
- subgraph subGraph1["API (Node/Express)"]
-        Routes["Rutas API"]
-        Controllers["Controladores"]
-        Middleware["Middlewares"]
-  end
- subgraph Persistencia["Persistencia"]
-        Prisma["Prisma ORM"]
-        DB[("Base de Datos MySQL")]
-  end
- subgraph Middleware["Middleware"]
-        Auth["Autenticación"]
-        RBAC["Control de Acceso"]
-        ErrorHandling["Manejo de Errores"]
-        Rate["Rate Limiting"]
-  end
- subgraph Controladores["Controladores"]
-        AuthCtrl["Auth Controller"]
-        UserCtrl["User Controller"]
-        AuthorCtrl["Author Controller"]
-        BookCtrl["Book Controller"]
-        ReportCtrl["Report Controller"]
-  end
-    UI --> Comps
-    Comps --> Pages
-    Pages --> Services
-    Services -- HTTP Requests --> Routes
-    Routes --> Middleware
-    Middleware --> Controllers
-    Controllers --> Prisma
-    Prisma --> DB
-    Middleware --- Auth & RBAC & ErrorHandling & Rate
-    Controllers --- AuthCtrl & UserCtrl & AuthorCtrl & BookCtrl & ReportCtrl
-
-     UI:::frontend
-     Comps:::frontend
-     Pages:::frontend
-     Services:::frontend
-     Routes:::api
-     Controllers:::api
-     Middleware:::api
-     Prisma:::database
-     DB:::database
-     Auth:::middlewares
-     RBAC:::middlewares
-     ErrorHandling:::middlewares
-     Rate:::middlewares
-     AuthCtrl:::controllers
-     UserCtrl:::controllers
-     AuthorCtrl:::controllers
-     BookCtrl:::controllers
-     ReportCtrl:::controllers
-    classDef frontend fill:#D6E4FF,stroke:#7B93DB,stroke-width:2px
-    classDef api fill:#D1F7C4,stroke:#82B366,stroke-width:2px
-    classDef database fill:#FFE6CC,stroke:#D79B00,stroke-width:2px
-    classDef middlewares fill:#BAC8FF,stroke:#3D56B2,stroke-width:1px
-    classDef controllers fill:#C5E8B7,stroke:#59A041,stroke-width:1px
-```
-
-
-## Características
-
-### Backend 
-- Autenticación basada en JWT
-- Gestión de roles (administrador y empleado)
-- CRUD completo para autores, libros y usuarios
-- Generación de reportes
-- Documentación completa de endpoints : [Aqui](https://docs.google.com/document/d/1I-r1KHZBm6ZxHvHGeeV8F5-v5n1i-smFPe9R8aJvb4s/edit?tab=t.0)
-
-## Tecnologías
-
-- Node.js & Express
-- Prisma ORM
-- MySQL
-- JWT
-
-## Instalación
-
-1. Clonar el repositorio
- ```bash
-   git clone https://github.com/tuusuario/biblioteca-municipal-api.git
-   cd backend
-```
-2. Instalar dependencias
-```bash
- npm install
-```
-3. Configurar variables de entorno
-```bash
-
-DATABASE_URL="mysql://usuario@localhost:puerto/base_de_datos"
-
-#environment
-NODE_ENV="development"
-
-# JWT Variables
-JWT_SECRET="secret"
-JWT_EXPIRES_IN="1d"
-
-# Server
-PORT=
-
-```
-
-4. Ejecutar migraciones de la base de datos
-```bash
-  npx prisma migrate dev
-  npx prisma studio
-
-```
-5. Iniciar el servidor
-```bash
-   npm run dev
-```
-
 
 #  Patrones de Diseño Implementados
 ## - Patrón MVC (Modelo-Vista-Controlador)
@@ -240,7 +114,7 @@ class Database {
 module.exports = new Database().getInstance();
 ```
 
-# Autenticación de Usuarios (8 puntos)
+# Autenticación de Usuarios 
 
 Sistema de autenticación basado en JWT
 Almacenamiento seguro de tokens en localStorage

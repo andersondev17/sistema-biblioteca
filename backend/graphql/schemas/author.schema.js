@@ -13,6 +13,7 @@ const typeDefs = gql`
   extend type Query {## Definimos la consulta para obtener autores
     autores: [Autor!]!
     autor(cedula: String!): Autor
+    autoresConLibros: [Autor!]!
   }
 `;
 

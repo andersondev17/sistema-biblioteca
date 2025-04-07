@@ -17,3 +17,4 @@ export const GET_DASHBOARD_DATA = gql`
     }
   }
 `;
+// rendimiento redujo aprox unos 6 segundo de carga y mejoro el puntaje en lighthouse 

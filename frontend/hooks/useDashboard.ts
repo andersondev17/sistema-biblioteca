@@ -85,6 +85,8 @@ export const useDashboardData = () => {
           loading: false,
           error
         });
+
+        
       } finally {
         if (isMountedRef.current) {
           setGlobalLoading(false);

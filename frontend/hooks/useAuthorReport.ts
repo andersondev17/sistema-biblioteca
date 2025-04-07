@@ -1,146 +1,76 @@
 // hooks/useAuthorReport.ts
-import { useLoading } from "@/contexts/LoadingContext";
 import { GET_FULL_AUTHORS_REPORT } from "@/graphql/queries/author.query";
 import AuthService from "@/services/auth.service";
 import graphqlClient from "@/services/graphql.service";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export const useAuthorReport = (initialCedula?: string) => {
-    const [state, setState] = useState({
-        author: null as Autor | null,
-        loading: true,
-        error: null as Error | null
-    });
+    const [author, setAuthor] = useState<Autor | null>(null);
+    const [loading, setLoading] = useState(initialCedula ? true : false);
+    const [error, setError] = useState<Error | null>(null);
     const [searchCedula, setSearchCedula] = useState(initialCedula || "");
-    const [activeCedula, setActiveCedula] = useState(initialCedula || "");
 
-    const { setLoading: setGlobalLoading } = useLoading();
-    const isMountedRef = useRef(true);
+    // Función optimizada para buscar autor
+    const fetchAuthor = useCallback(async (cedula: string) => {
+        if (!cedula) return;
 
-    // Cache de datos para evitar múltiples peticiones
-    const authorsCache = useRef<Autor[]>([]);
-
-    // Función para buscar autor por cédula
-    const fetchAuthorReport = useCallback(async (cedula: string) => {
-        if (!cedula.trim()) return;
+        setLoading(true);
+        setError(null);
 
         try {
-            setState(prev => ({ ...prev, loading: true, error: null }));
-            setGlobalLoading(true);
-
-            // Limpiar cache si la cédula buscada no está en la lista
-            if (authorsCache.current.length > 0 && !authorsCache.current.some(a => a.cedula === cedula)) {
-                authorsCache.current = [];
-            }
-            // Si tenemos autores en caché, intentamos buscar primero ahí
-            if (authorsCache.current.length > 0) {
-                const cachedAuthor = authorsCache.current.find(a => a.cedula === cedula);
-                if (cachedAuthor) {
-                    // Enriquecer libros con imágenes de portada
-                    const authorData = {
-                        ...cachedAuthor,
-                        libros: (cachedAuthor.libros || []).map(libro => ({
-                            ...libro,
-                            cover: `https://picsum.photos/seed/${libro.isbn}/300/450`
-                        }))
-                    };
-
-                    setState({
-                        author: authorData,
-                        loading: false,
-                        error: null
-                    });
-
-                    setGlobalLoading(false);
-                    return; // Evitar petición a la API
-                }
+            // Verificar token antes de realizar la consulta
+            const token = AuthService.getToken();
+            if (!token) {
+                throw new Error("No has iniciado sesión o tu sesión ha expirado");
             }
 
-            // Si no está en caché, consultamos la API
             const { data } = await graphqlClient.query({
                 query: GET_FULL_AUTHORS_REPORT,
+                variables: { cedula },
                 fetchPolicy: 'network-only',
+                context: {
+                    // Asegurar que el token se esté enviando correctamente
+                    headers: {
+                        authorization: `Bearer ${token}`
+                    }
+                }
             });
 
-            if (!isMountedRef.current) return;
-
-            // La respuesta viene bajo la clave 'autores'
-            const authors = data?.autores || [];
-
-            // Actualizar caché
-            authorsCache.current = authors;
-
-            // Buscar el autor por cédula
-            const author = authors.find((a: Autor) => a.cedula === cedula);
-
-            if (author) {
-                // Enriquecer libros con imágenes de portada
-                const authorData = {
-                    ...author,
-                    libros: (author.libros || []).map((libro: LibroView) => ({
+            // Añadir URLs de portada a los libros
+            if (data.autor) {
+                setAuthor({
+                    ...data.autor,
+                    libros: (data.autor.libros || []).map((libro:LibroView) => ({
                         ...libro,
                         cover: `https://picsum.photos/seed/${libro.isbn}/300/450`
                     }))
-                };
-
-                setState({
-                    author: authorData,
-                    loading: false,
-                    error: null
                 });
             } else {
-                setState({
-                    author: null,
-                    loading: false,
-                    error: new Error("Autor no encontrado")
-                });
+                setAuthor(null);
+                setError(new Error("Autor no encontrado"));
             }
         } catch (err) {
-            console.error("Error fetching author report:", err);
-
-            if (isMountedRef.current) {
-                setState(prev => ({ ...prev, loading: false }));
-
-            }
+            console.error("Error al obtener autor:", err);
+            setError(err instanceof Error ? err : new Error("Error al buscar el autor"));
         } finally {
-            if (isMountedRef.current) {
-                setGlobalLoading(false);
-            }
+            setLoading(false);
         }
-    }, [setGlobalLoading]);
-
-    // Activar búsqueda cuando cambia initialCedula prop
-    useEffect(() => {
-        if (initialCedula && initialCedula !== activeCedula) {
-            setActiveCedula(initialCedula);
-            setSearchCedula(initialCedula);
-        }
-    }, [initialCedula, activeCedula]);
-
-    // Ejecutar búsqueda cuando cambia la cédula activa
-    useEffect(() => {
-        if (activeCedula) {
-            fetchAuthorReport(activeCedula);
-        } else {
-            setState(prev => ({ ...prev, loading: false }));
-        }
-    }, [activeCedula, fetchAuthorReport]);
-
-    // Cleanup al desmontar componente
-    useEffect(() => {
-        return () => {
-            isMountedRef.current = false;
-        };
     }, []);
 
-    // Handler para botón de búsqueda
+    // Efecto para cargar el autor inicial
+    useEffect(() => {
+        if (initialCedula) {
+            fetchAuthor(initialCedula);
+        }
+    }, [initialCedula, fetchAuthor]);
+
+    // Manejadores para la búsqueda
     const handleSearch = useCallback(() => {
         if (searchCedula.trim()) {
-            setActiveCedula(searchCedula.trim());
+            fetchAuthor(searchCedula.trim());
         }
-    }, [searchCedula]);
+    }, [searchCedula, fetchAuthor]);
 
-    // Método para búsqueda por Enter
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             handleSearch();
@@ -148,7 +78,9 @@ export const useAuthorReport = (initialCedula?: string) => {
     }, [handleSearch]);
 
     return {
-        ...state,
+        author,
+        loading,
+        error,
         searchCedula,
         setSearchCedula,
         handleSearch,
