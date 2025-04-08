@@ -37,7 +37,7 @@ const RootLayout = ({ children }: { children: ReactNode }) => {
   return (
     <html lang="es">
       <body className={`${ibmPlexSans.className} ${bebasNeue.variable} antialiased`}>
-      <ApolloWrapper> {/* Envuelve toda la aplicación */}
+      <ApolloWrapper>{/* para proveer el cliente de Apollo, */}
 
         <LoadingProvider>
           {children}

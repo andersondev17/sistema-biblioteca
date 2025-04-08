@@ -1,23 +1,11 @@
 // hooks/useDashboard.ts
+import { INITIAL_STATS } from "@/constants";
 import { useLoading } from "@/contexts/LoadingContext";
 import { GET_DASHBOARD_DATA } from "@/graphql/queries/dashboard.query";
+import { getGreeting } from "@/lib/utils";
 import AuthService from "@/services/auth.service";
 import graphqlClient from "@/services/graphql.service";
 import { useEffect, useRef, useState } from "react";
-
-type DashboardStats = {
-  totalUsers: number;
-  totalBooks: number;
-  totalAuthors: number;
-  borrowedBooks: number;
-};
-
-const INITIAL_STATS: DashboardStats = {
-  totalUsers: 0,
-  totalBooks: 0,
-  totalAuthors: 0,
-  borrowedBooks: 145
-};
 
 type Book = {
   isbn: string;
@@ -37,10 +25,6 @@ const FALLBACK_BOOKS: Book[] = Array.from({ length: 3 }, (_, i) => ({
   date: '12/01/24'
 }));
 
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  return hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
-};
 export const useDashboardData = () => {
   const [state, setState] = useState({
     stats: INITIAL_STATS,
@@ -50,7 +34,7 @@ export const useDashboardData = () => {
   });
 
   const { setLoading: setGlobalLoading } = useLoading();
-  const isMountedRef = useRef(true); // Para controlar el estado del componente
+  const isMountedRef = useRef(true); // controla el estado del componente
   const user = AuthService.getCurrentUser();
 
   useEffect(() => {
@@ -60,10 +44,9 @@ export const useDashboardData = () => {
         setGlobalLoading(true);
         setState(prev => ({ ...prev, loading: true }));
 
-        const { data } = await graphqlClient.query({
+        const { data } = await graphqlClient.query({//Al montarse consume la query del dashboard 
           query: GET_DASHBOARD_DATA,
           fetchPolicy: 'network-only',
-
         });
 
         if (!isMountedRef.current) return;
@@ -77,12 +60,11 @@ export const useDashboardData = () => {
           date: new Date().toLocaleDateString()
         }));
 
-        setState({
+        setState({//si es correcto actualizamos el estado con la info consumida
           stats: {
             totalUsers: data.totalUsers ?? 0,
             totalBooks: data.totalBooks ?? 0,
             totalAuthors: data.totalAuthors ?? 0,
-            borrowedBooks: INITIAL_STATS.borrowedBooks
           },
           recentBooks: bookList.length > 0 ? bookList : FALLBACK_BOOKS,
           loading: false,
@@ -103,6 +85,8 @@ export const useDashboardData = () => {
           loading: false,
           error
         });
+
+        
       } finally {
         if (isMountedRef.current) {
           setGlobalLoading(false);

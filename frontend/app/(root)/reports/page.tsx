@@ -1,53 +1,88 @@
-// page.tsx - Versión Corregida
 'use client'
 
-import AuthorReport from '@/components/AuthorReport'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { AuthorCard } from '@/components/reports/AuthorCard'
+import { AuthorReport } from '@/components/reports/AuthorReport'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { GET_FULL_AUTHORS_REPORT } from '@/graphql/queries/author.query'
-import AuthService from '@/services/auth.service'
-import { useQuery } from '@apollo/client'
-import { FileText, User } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { useAuthors } from '@/hooks/useAuthors'
+import { CopyIcon, FileTextIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
-const ReportsPage = () => {
+export default function ReportsPage() {
+  const { authors, loading, refresh, getAuthor } = useAuthors()
   const [selectedCedula, setSelectedCedula] = useState("")
-  const [userToken, setUserToken] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
 
-  // Verificar autenticación al montar el componente
+  // Seleccionar el primer autor al cargar la lista
   useEffect(() => {
-    const token = AuthService.getToken()
-    const user = AuthService.getCurrentUser()
-    
-    if (!token || !user) {
-      window.location.href = '/login'
-      return
+    if (authors?.length && !selectedCedula) {
+      setSelectedCedula(authors[0].cedula)
     }
-    
-    setUserToken(token)
+  }, [authors, selectedCedula])
+
+  // Manejar errores
+  useEffect(() => {
+    const handleError = (err: Error) => {
+      setError(err)
+      console.error("Error en página de reportes:", err)
+    }
+
+    // Establecer un manejador global de errores
+    window.addEventListener('error', (e) => handleError(e.error))
+
+    return () => {
+      window.removeEventListener('error', (e) => handleError(e.error))
+    }
   }, [])
 
-  const { loading, error, data } = useQuery(GET_FULL_AUTHORS_REPORT, {
-    context: {
-      headers: {
-        Authorization: `Bearer ${userToken}`
-      }
-    },
-    skip: !userToken // Evitar consulta sin token
-  })
-
-  const handleAuthorSelect = (cedula: string) => {
-    setSelectedCedula(cedula)
+  // Función para seleccionar un autor
+  const selectAuthor = (cedula: string) => {
+    if (cedula !== selectedCedula) {
+      setSelectedCedula(cedula)
+      
+      // Copiar cédula al portapapeles para facilidad de uso
+      navigator.clipboard.writeText(cedula)
+        .then(() => toast.success("Cédula copiada al portapapeles para facilitar búsqueda"))
+        .catch(() => {/* Silenciar errores de clipboard */})
+      
+      // Pre-cargar el autor
+      getAuthor(cedula).catch(err => console.error("Error pre-cargando autor:", err))
+    }
   }
 
-  if (!userToken) return null // Evitar renderizado innecesario
+  // Filtrar autores por nombre o cédula
+  const filteredAuthors = searchQuery.trim() 
+    ? authors?.filter(author => 
+        author.nombreCompleto.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        author.cedula.includes(searchQuery)
+      )
+    : authors;
+
+  if (error) {
+    return (
+      <ProtectedRoute>
+        <ErrorDisplay
+          title="Error en reportes"
+          message={error.message}
+          retryAction={() => {
+            setError(null)
+            refresh()
+          }}
+        />
+      </ProtectedRoute>
+    )
+  }
 
   return (
     <ProtectedRoute>
       <div className="space-y-8">
         <div className="flex items-center gap-3">
-          <FileText className="h-6 w-6 text-primary" />
+          <FileTextIcon className="h-6 w-6 text-primary" />
           <h1 className="text-3xl font-semibold text-white">Reportes de Autores</h1>
         </div>
 
@@ -55,51 +90,70 @@ const ReportsPage = () => {
           <CardHeader>
             <CardTitle className="text-light-200">Autores disponibles</CardTitle>
             <CardDescription className="text-light-500">
-              Seleccione un autor para ver su reporte o busque por cédula
+              Seleccione un autor para ver su reporte detallado. Al seleccionar un autor, 
+              su cédula se copiará automáticamente para facilitar la búsqueda.
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-4">
+              <Input
+                type="text"
+                placeholder="Buscar por nombre o cédula..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-dark-400 border-dark-600 text-light-100"
+              />
+            </div>
+          
             {loading ? (
-              <div className="flex flex-wrap gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {[1, 2, 3, 4, 5, 6].map(i => (
-                  <Skeleton key={i} className="h-16 w-full sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-0.75rem)] bg-dark-400" />
+                  <div key={i} className="bg-dark-400 h-16 rounded-lg animate-pulse"></div>
                 ))}
               </div>
-            ) : error ? (
-              <div className="text-red-400">Error cargando autores: {error.message}</div>
+            ) : filteredAuthors?.length === 0 ? (
+              <p className="text-light-500 text-center p-4">
+                {searchQuery ? "No se encontraron autores que coincidan con la búsqueda" : "No hay autores disponibles en este momento"}
+              </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {data?.autores.map((author: Autor) => (
-                  <div
+                {filteredAuthors.map(author => (
+                  <AuthorCard
                     key={author.cedula}
-                    className={`flex items-center gap-2 p-3 rounded-lg ${selectedCedula === author.cedula
-                        ? 'bg-dark-500 ring-2 ring-primary'
-                        : 'bg-dark-400 hover:bg-dark-500'
-                      } transition-colors cursor-pointer`}
-                    onClick={() => handleAuthorSelect(author.cedula)}
-                  >
-                    <User className="h-5 w-5 text-primary flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium text-light-200 truncate">{author.nombreCompleto}</p>
-                      <p className="text-xs text-light-500">Cédula: {author.cedula}</p>
-                    </div>
-                  </div>
+                    author={author}
+                    isSelected={selectedCedula === author.cedula}
+                    onClick={() => selectAuthor(author.cedula)}
+                  />
                 ))}
-
-                {data?.autores.length === 0 && (
-                  <div className="col-span-full p-4 text-light-500 text-center">
-                    No hay autores disponibles
-                  </div>
-                )}
+              </div>
+            )}
+            
+            {selectedCedula && (
+              <div className="mt-4 p-3 rounded-lg bg-dark-500/50 flex justify-between items-center">
+                <div>
+                  <p className="text-light-200">Autor seleccionado: {authors?.find(a => a.cedula === selectedCedula)?.nombreCompleto}</p>
+                  <p className="text-light-500 text-sm flex items-center gap-1">
+                    Cédula: {selectedCedula}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-5 w-5 rounded-full hover:bg-dark-400" 
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedCedula)
+                        toast.success("Cédula copiada al portapapeles")
+                      }}
+                    >
+                      <CopyIcon className="h-3 w-3" />
+                    </Button>
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <AuthorReport initialCedula={selectedCedula} />
+        {selectedCedula && <AuthorReport cedula={selectedCedula} />}
       </div>
     </ProtectedRoute>
   )
 }
-
-export default ReportsPage

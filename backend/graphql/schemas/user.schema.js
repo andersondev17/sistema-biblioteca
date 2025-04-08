@@ -1,7 +1,7 @@
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
-  type Usuario {
+  type Usuario { ## Definimos el tipo Usuario
     id: ID!
     userName: String!
     tipo: String!
@@ -9,7 +9,7 @@ const typeDefs = gql`
     updatedAt: String!
   }
 
-  extend type Query {
+  extend type Query {## consulta para obtener usuarios
     usuarios: [Usuario!]!
     usuario(id: ID!): Usuario
   }

@@ -6,7 +6,7 @@ const resolvers = {
     Query: {
         usuarios: (_, __, context) => {
             if (context.user.tipo !== 'ADMINISTRADOR') {
-                throw new AuthenticationError('Acceso restringido');
+                throw new AuthenticationError('Acceso restringido');//si el token es valido obtenemos los datos del usuario
             }
             return userController.getAllUsersGraphQL();
         },

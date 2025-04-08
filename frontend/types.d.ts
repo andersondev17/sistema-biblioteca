@@ -8,6 +8,20 @@ interface Usuario {
     updatedAt: Date;
 }
 
+interface StoredUser {
+    id: number;
+    userName: string;
+    tipo: 'ADMINISTRADOR' | 'EMPLEADO';
+  }
+  
+
+interface Usuario extends StoredUser {
+    password: string
+    createdAt: Date
+    updatedAt: Date
+}
+
+
 interface Autor {
     cedula: string;
     nombreCompleto: string;

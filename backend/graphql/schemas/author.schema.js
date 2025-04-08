@@ -1,7 +1,7 @@
-const { gql } = require('apollo-server-express');
+const { gql } = require('apollo-server-express');//importamos gql para crear el esquema de GraphQL usando Apollo Serve
 
 const typeDefs = gql`
-  type Autor {
+  type Autor {## Definimos el tipo Autor
     cedula: String!
     nombreCompleto: String!
     nacionalidad: String!
@@ -10,9 +10,10 @@ const typeDefs = gql`
     updatedAt: String!
   }
 
-  extend type Query {
+  extend type Query {## Definimos la consulta para obtener autores
     autores: [Autor!]!
     autor(cedula: String!): Autor
+    autoresConLibros: [Autor!]!
   }
 `;
 

@@ -22,3 +22,7 @@ export const getAvatarColor = (name: string = '') => {
   const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length
   return colors[index]
 }
+export const getGreeting = () => {
+  const hour = new Date().getHours();
+  return hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
+};

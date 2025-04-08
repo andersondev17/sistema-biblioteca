@@ -5,7 +5,7 @@ const bookController = require('../../controllers/book.controller');
 const resolvers = {
   Query: {
     libros: (_, args, context) => {
-      if (!context.user) throw new AuthenticationError('No autenticado');
+      if (!context.user) throw new AuthenticationError('No autenticado');//si el token es valido obtenemos los datos del libro
       return bookController.getAllBooksGraphQL(args);
   },
     libro: (_, { isbn }) => bookController.getBookByISBNGraphQL(isbn)

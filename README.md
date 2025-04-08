@@ -234,5 +234,3 @@ module.exports = new Database().getInstance();
 Sistema de autenticación basado en JWT
 Almacenamiento seguro de tokens en localStorage
 Manejo de roles mediante middlewares
-
-
