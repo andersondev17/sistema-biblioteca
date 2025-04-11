@@ -1,4 +1,4 @@
-// server.js (reemplazando app.js)
+// app.js
 const express = require("express");
 const cors = require("cors");
 const { ApolloServer } = require("apollo-server-express");
@@ -9,16 +9,25 @@ const typeDefs = require("./graphql/schemas");
 const resolvers = require("./graphql/resolvers");
 const routes = require("./routes");
 const errorMiddleware = require("./middlewares/error.middleware.js");
-const { prisma } = require('./prisma/client'); // Añadir al inicio
+const { prisma } = require('./database/db');
 
 
 async function startServer() {
     // Inicializar Express
     const app = express();
 
+    // Configurar ruta de health check primero para que Railway pueda verificar
+    app.get('/health', (_, res) => {
+        res.status(200).json({
+            status: 'OK',
+            timestamp: new Date().toISOString(),
+            environment: NODE_ENV
+        });
+    });
+
     // Permitir solicitudes desde el frontend
     app.use(cors({
-        origin: process.env.FRONTEND_URL || "http://localhost:3001",
+        origin: process.env.FRONTEND_URL || "*",
         credentials: true,
         allowedHeaders: ["Authorization", "Content-Type"]
     }));
@@ -51,28 +60,13 @@ async function startServer() {
     // Configurar rutas API REST
     routes.setupRoutes(app);
 
-    // Ruta de healthcheck
+    // Ruta de información básica
     app.get("/", (_, res) => res.json({
         message: "API Biblioteca v1.0",
         status: "online",
         environment: NODE_ENV
     }));
 
-    app.get('/health', async (req, res) => {
-        try {
-            res.status(200).json({
-                status: 'OK',
-                timestamp: new Date().toISOString(),
-                environment: NODE_ENV
-            });
-        } catch (error) {
-            console.error('❌ Health Check Error:', error);
-            res.status(200).json({
-                status: 'STARTING',
-                message: 'Service is starting up'
-            });
-        }
-    });
     // Middleware para rutas no encontradas y errores
     app.use("*", (_, res) => res.status(404).json({
         success: false,
@@ -89,19 +83,24 @@ async function startServer() {
     // Manejar errores no capturados
     process.on("unhandledRejection", (err) => {
         console.error("❌ Error no manejado:", err);
-        httpServer.close(() => process.exit(1));
+        // No cerrar el servidor en producción
+        if (NODE_ENV !== 'production') {
+            httpServer.close(() => process.exit(1));
+        }
     });
 
     return { server, httpServer };
 }
 
-// Exportar para testing o uso independiente
 module.exports = { startServer };
 
 // Iniciar solo si es el módulo principal
 if (require.main === module) {
     startServer().catch(err => {
         console.error("Error de inicialización:", err);
-        process.exit(1);
+        // No salir en producción
+        if (process.env.NODE_ENV !== 'production') {
+            process.exit(1);
+        }
     });
 }
