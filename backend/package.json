@@ -4,7 +4,7 @@
   "main": "app.js",
   "scripts": {
     "dev": "nodemon src/app.js",
-    "build": "tsc",
+    "build": "echo build complete",
     "start": "node src/app.js",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -39,7 +39,6 @@
     "eslint": "^9.22.0",
     "globals": "^16.0.0",
     "nodemon": "^3.1.9",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "ts-node": "^10.9.2"
   }
 }

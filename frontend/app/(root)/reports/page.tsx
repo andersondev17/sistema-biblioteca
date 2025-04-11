@@ -6,7 +6,6 @@ import { AuthorCard } from '@/components/reports/AuthorCard'
 import { AuthorReport } from '@/components/reports/AuthorReport'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { useAuthors } from '@/hooks/useAuthors'
 import { CopyIcon, FileTextIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -95,15 +94,7 @@ export default function ReportsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-4">
-              <Input
-                type="text"
-                placeholder="Buscar por nombre o cédula..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-dark-400 border-dark-600 text-light-100"
-              />
-            </div>
+           
           
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
