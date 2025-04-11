@@ -4,11 +4,13 @@
   "main": "app.js",
   "scripts": {
     "dev": "nodemon src/app.js",
-    "build": "echo build complete",
+    "build": "npm install && prisma generate",
     "start": "node src/app.js",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prisma:deploy": "prisma migrate deploy",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -32,13 +34,8 @@
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@types/bcrypt": "^5.0.2",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^22.13.10",
     "eslint": "^9.22.0",
     "globals": "^16.0.0",
-    "nodemon": "^3.1.9",
-    "ts-node": "^10.9.2"
+    "nodemon": "^3.1.9"
   }
 }

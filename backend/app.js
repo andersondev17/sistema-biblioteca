@@ -56,6 +56,9 @@ async function startServer() {
         environment: NODE_ENV
     }));
 
+    app.get('/health', (req, res) => {
+        res.status(200).json({ status: 'OK', timestamp: Date.now() });
+    });
     // Middleware para rutas no encontradas y errores
     app.use("*", (_, res) => res.status(404).json({
         success: false,
