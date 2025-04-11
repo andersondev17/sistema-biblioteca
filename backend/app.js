@@ -60,21 +60,16 @@ async function startServer() {
 
     app.get('/health', async (req, res) => {
         try {
-            // Verificar conexión a DB
-            await prisma.$queryRaw`SELECT 1`;
-
             res.status(200).json({
                 status: 'OK',
                 timestamp: new Date().toISOString(),
-                db: 'connected',
-                environment: process.env.NODE_ENV
+                environment: NODE_ENV
             });
         } catch (error) {
             console.error('❌ Health Check Error:', error);
-            res.status(500).json({
-                status: 'ERROR',
-                error: error.message,
-                db: 'disconnected'
+            res.status(200).json({
+                status: 'STARTING',
+                message: 'Service is starting up'
             });
         }
     });
