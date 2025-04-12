@@ -17,13 +17,27 @@ async function startServer() {
     const app = express();
 
     // Configurar ruta de health check primero para que Railway pueda verificar
-    app.get('/health', (_, res) => {
-        res.status(200).json({
+    app.get('/health', async(_, res) => {
+        const status = {
             status: 'OK',
+            api: 'running',
             timestamp: new Date().toISOString(),
             environment: NODE_ENV
-        });
+        };
+        try {
+            const db = require('./database/db');
+            // Realizar una consulta simple para despertar la BD
+            await db.$queryRaw`SELECT 1 as ping`;
+            status.database = 'connected';
+        } catch (error) {
+            status.database = 'disconnected';
+            status.status = 'WARNING';
+            console.error('Health check - Database connection error:', error.message);
+        }
+        
+        return res.status(status.status === 'OK' ? 200 : 207).json(status);
     });
+    
 
     // Permitir solicitudes desde el frontend
     app.use(cors({

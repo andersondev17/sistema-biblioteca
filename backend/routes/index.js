@@ -6,8 +6,8 @@ const API_PREFIX = "/api/v1";
 const routeConfig = [
     { path: "/auth", handler: require("./auth.routes.js") },
     { path: "/users", handler: require("./user.routes.js"), protected: true },
-    { path: "/authors", handler: require("./author.routes.js"), protected: true },
-    { path: "/books", handler: require("./book.routes.js"), protected: true },
+    { path: "/authors", handler: require("./author.routes.js")},
+    { path: "/books", handler: require("./book.routes.js") },
     { path: "/reports", handler: require("./report.routes.js"), protected: true }
 ];
 
